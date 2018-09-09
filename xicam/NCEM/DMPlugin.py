@@ -20,7 +20,16 @@ class DMPlugin(DataHandlerPlugin):
     def __call__(self, path, index_z, index_t):
         aa = dm.fileDM(path)
         aa.parseHeader()
-        return aa.getDataset(index_z)['data'][index_t]
+        #Need if statements to deal with 2D and 3D and 4D datasets
+        im1 = aa.getDataset(index_z) #should almost always have index_z=0
+        if im1['data'].ndim == 2:
+            return im1
+        elif im1['data'].ndim == 3:
+            return im1[:,:,index_t]
+        elif im1['data'] = 4:
+            #Not implemented yet. DM4 files are written in incorrectly written
+            #in Fortran ordering
+            return im1['data'][:,:,:,index_t]
 
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
@@ -31,15 +40,23 @@ class DMPlugin(DataHandlerPlugin):
 
     @staticmethod
     def num_z(path):
+        '''The number of datasets in the DM file. Usually a thumbnail
+        and the actual data. The thumbnail shoul dbe ignored
+        
+        '''
         f = dm.fileDM(path)
         f.parseHeader()
-        return f.zSize[0]
+        return f.numObjects-1
 
     @staticmethod
     def num_t(path):
+        '''The number of slices in the first dimension (C-ordering)
+        
+        This is for 3D datasets (volumes) and time series of focal series
+        '''
         f = dm.fileDM(path)
         f.parseHeader()
-        return f.zSize[1]
+        return f.zSize[1] #use zSize[1] rather than zSize[0] to ignore the thumbnail
 
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
