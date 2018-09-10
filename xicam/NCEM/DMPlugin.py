@@ -16,8 +16,10 @@ class DMPlugin(DataHandlerPlugin):
     name = 'DMPlugin'
 
     DEFAULT_EXTENTIONS = ['.dm3', '.dm4']
-
+    
     def __call__(self, path, index_z, index_t):
+        self.logPAE('call')
+        #self.logPAE(str(self.md.dmType))
         aa = dm.fileDM(path)
         aa.parseHeader()
         #Need if statements to deal with 2D and 3D and 4D datasets
@@ -33,6 +35,14 @@ class DMPlugin(DataHandlerPlugin):
             #Not fully implemented yet. 4D DM4 files are written in
             #written as [kx,ky,Y,X]. We want 
             return im1['data'][index_z,index_t,:,:]
+    
+    def logPAE(self,msg):
+        '''Simple logging script for Peter's windows machine
+        
+        '''
+        with open('C:/users/peter/Desktop/temp.txt','a') as f:
+            f.write(msg)
+            f.write('\n')
         
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
@@ -70,6 +80,7 @@ class DMPlugin(DataHandlerPlugin):
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(path):
+        #logPAE('parse')
         md = dm.fileDM(path)
         md.parseHeader()
         return md.allTags
