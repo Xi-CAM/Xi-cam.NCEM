@@ -74,6 +74,11 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             data = np.squeeze(data) #test for 1D spectra
             if data.ndim > 1:
                 # kwargs['transform'] = QTransform(0, -1, 1, 0, 0, data.shape[-2])
-                super(NCEMViewerPlugin, self).setImage(img=data, *args, **kwargs)
+                #for setImage:
+                #   use scale = [xPixSize,yPixSize] to calibrate the pixelSize
+                #   use pg.PlotItem.setLabel('bottom', text='x axis title', units='m') 
+                super(NCEMViewerPlugin, self).setImage(img=data, scale=[1e-9,1e-9], *args, **kwargs)
+                self.axesItem.setLabel('bottom', text='X',units='m')
+                self.axesItem.setLabel('left', text='Y',units='m')
             #else:
             #    msg.logMessage('Cant load 1D data.')
