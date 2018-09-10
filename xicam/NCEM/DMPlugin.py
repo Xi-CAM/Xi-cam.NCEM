@@ -19,12 +19,12 @@ class DMPlugin(DataHandlerPlugin):
     
     def __call__(self, path, index_z, index_t):
         self.logPAE('call')
-        #self.logPAE(str(self.md.dmType))
+
         aa = dm.fileDM(path)
         aa.parseHeader()
-        #Need if statements to deal with 2D and 3D and 4D datasets
         im1 = aa.getDataset(0) #Most DM files have only 1 dataset
-        #return im1['data']
+
+        #Need if statements to deal with 2D and 3D and 4D datasets
         if im1['data'].ndim == 2:
             #2D image
             return im1['data']
@@ -51,8 +51,8 @@ class DMPlugin(DataHandlerPlugin):
                 for index_t in range(cls.num_t(path)):
                     yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path, index_z, index_t))
 
-    @staticmethod
-    def num_z(path):
+    @classmethod
+    def num_z(self,path):
         '''The number of slizes along axis 2 (start at 0) (C-ordering)
         for 4D data sets. Not used for 3D data sets
         
@@ -63,8 +63,8 @@ class DMPlugin(DataHandlerPlugin):
         f.parseHeader()
         return f.zSize2[1] #use zSize2[1] rather than [0] to skip the thumbnail
 
-    @staticmethod
-    def num_t(path):
+    @classmethod
+    def num_t(self,path):
         '''The number of slices in the first dimension (C-ordering) for 3D
         datasets
         
@@ -76,11 +76,11 @@ class DMPlugin(DataHandlerPlugin):
         f = dm.fileDM(path)
         f.parseHeader()
         return f.zSize[1] #use zSize[1] rather than zSize[0] to ignore the thumbnail
-
-    @staticmethod
+        
+    @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
-    def parseDataFile(path):
-        #logPAE('parse')
+    def parseDataFile(self,path):
+        #self.logPAE('parse')
         md = dm.fileDM(path)
         md.parseHeader()
         return md.allTags
