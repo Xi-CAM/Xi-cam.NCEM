@@ -21,16 +21,19 @@ class DMPlugin(DataHandlerPlugin):
         aa = dm.fileDM(path)
         aa.parseHeader()
         #Need if statements to deal with 2D and 3D and 4D datasets
-        im1 = aa.getDataset(index_z) #should almost always have index_z=0
+        im1 = aa.getDataset(0) #Most DM files have only 1 dataset
+        #return im1['data']
         if im1['data'].ndim == 2:
-            return im1
+            #2D image
+            return im1['data']
         elif im1['data'].ndim == 3:
-            return im1[:,:,index_t]
-        elif im1['data'] = 4:
-            #Not implemented yet. DM4 files are written in incorrectly written
-            #in Fortran ordering
-            return im1['data'][:,:,:,index_t]
-
+            #3D data set. Volume or image stack
+            return im1['data'][index_t,:,:]
+        elif im1['data'].ndim == 4:
+            #Not fully implemented yet. 4D DM4 files are written in
+            #written as [kx,ky,Y,X]. We want 
+            return im1['data'][index_z,index_t,:,:]
+        
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
@@ -40,19 +43,25 @@ class DMPlugin(DataHandlerPlugin):
 
     @staticmethod
     def num_z(path):
-        '''The number of datasets in the DM file. Usually a thumbnail
-        and the actual data. The thumbnail shoul dbe ignored
+        '''The number of slizes along axis 2 (start at 0) (C-ordering)
+        for 4D data sets. Not used for 3D data sets
         
+        
+        Only used for 4D data sets
         '''
         f = dm.fileDM(path)
         f.parseHeader()
-        return f.numObjects-1
+        return f.zSize2[1] #use zSize2[1] rather than [0] to skip the thumbnail
 
     @staticmethod
     def num_t(path):
-        '''The number of slices in the first dimension (C-ordering)
+        '''The number of slices in the first dimension (C-ordering) for 3D
+        datasets
         
-        This is for 3D datasets (volumes) and time series of focal series
+        This is the number of slices along the "Z" axis. For a 3D volume
+        this is is a slize long Z. For an image stack this is the requested
+        image in the stack.
+        
         '''
         f = dm.fileDM(path)
         f.parseHeader()
