@@ -16,7 +16,9 @@ class DMPlugin(DataHandlerPlugin):
     name = 'DMPlugin'
 
     DEFAULT_EXTENTIONS = ['.dm3', '.dm4']
-    
+
+    descriptor_keys = ['']
+
     def __call__(self, path, index_z, index_t):
         self.logPAE('call')
 
@@ -40,10 +42,7 @@ class DMPlugin(DataHandlerPlugin):
         '''Simple logging script for Peter's windows machine
         
         '''
-        with open('C:/users/peter/Desktop/temp.txt','a') as f:
-            f.write(msg)
-            f.write('\n')
-        
+        pass
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
@@ -79,7 +78,7 @@ class DMPlugin(DataHandlerPlugin):
         
     @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
-    def parseDataFile(self,path):
+    def parseDataFile(self, path):
         #self.logPAE('parse')
         md = dm.fileDM(path)
         md.parseHeader()
@@ -88,3 +87,12 @@ class DMPlugin(DataHandlerPlugin):
     @classmethod
     def getStartDoc(cls, paths, start_uid):
         return start_doc(start_uid=start_uid, metadata={'paths': paths})
+
+    @classmethod
+    def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
+        metadata = cls.parseTXTFile(paths[0])
+        metadata.update(cls.parseDataFile(paths[0]))
+
+        # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
+        # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
+        yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
