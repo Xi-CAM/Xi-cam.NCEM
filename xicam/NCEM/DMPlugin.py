@@ -38,11 +38,6 @@ class DMPlugin(DataHandlerPlugin):
             #written as [kx,ky,Y,X]. We want 
             return im1['data'][index_z,index_t,:,:]
     
-    def logPAE(self,msg):
-        '''Simple logging script for Peter's windows machine
-        
-        '''
-        pass
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
