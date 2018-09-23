@@ -74,10 +74,41 @@ class DMPlugin(DataHandlerPlugin):
     @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(self, path):
-        #self.logPAE('parse')
         md = dm.fileDM(path)
         md.parseHeader()
-        return md.allTags
+        #Save most useful metaData
+        metaData = {}
+        for kk,ii in md.allTags.items():
+            #Most useful starting tags
+            prefix1 = 'ImageList.{}.ImageTags.'.format(md.numObjects)
+            prefix2 = 'ImageList.{}.ImageData.'.format(md.numObjects)
+            pos1 = kk.find(prefix1)
+            pos2 = kk.find(prefix2)
+            if pos1 > -1:
+                sub = kk[pos1+len(prefix):]
+                metaData[sub] = ii
+            elif pos2 > -1:
+                sub = kk[pos2+len(prefix):]
+                metaData[sub] = ii
+            
+            #Remove unneeded keys
+            for jj in list(metaData):
+                if jj.find('frame sequence')>-1:
+                    del metaData[jj]
+                elif jj.find('Private')>-1:
+                    del metaData[jj]
+                elif jj.find('Reference Images')>-1:
+                    del metaData[jj]
+                elif jj.find('Frame.Intensity')>-1:
+                    del metaData[jj]
+                elif jj.find('Area.Transform')>-1:
+                    del metaData[jj]
+                elif jj.find('Parameters.Objects')>-1:
+                    del metaData[jj]
+                elif jj.find('Device.Parameters')>-1:
+                    del metaData[jj]
+
+        return metaData
 
     @classmethod
     def getStartDoc(cls, paths, start_uid):
