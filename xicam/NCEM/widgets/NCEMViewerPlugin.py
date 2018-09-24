@@ -14,7 +14,7 @@ import pyqtgraph as pg
 
 class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
-
+                
         # Add axes
         self.axesItem = PlotItem()
         # self.axesItem.setLabel('bottom', u'q ()')  # , units='s')
@@ -77,8 +77,10 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 #for setImage:
                 #   use scale = [xPixSize,yPixSize] to calibrate the pixelSize
                 #   use pg.PlotItem.setLabel('bottom', text='x axis title', units='m') 
-                super(NCEMViewerPlugin, self).setImage(img=data, scale=[1e-9,1e-9], *args, **kwargs)
-                self.axesItem.setLabel('bottom', text='X',units='m')
-                self.axesItem.setLabel('left', text='Y',units='m')
+                scale0 = (header.descriptors[0]['Calibrations.Dimension.1.Scale'], header.descriptors[0]['Calibrations.Dimension.2.Scale'])
+                units0 = (header.descriptors[0]['Calibrations.Dimension.1.Units'], header.descriptors[0]['Calibrations.Dimension.2.Units'])
+                super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
+                self.axesItem.setLabel('bottom', text='X',units=units0[0])
+                self.axesItem.setLabel('left', text='Y',units=units0[1])
             #else:
             #    msg.logMessage('Cant load 1D data.')
