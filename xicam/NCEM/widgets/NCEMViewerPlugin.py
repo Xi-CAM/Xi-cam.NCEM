@@ -74,11 +74,23 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             data = np.squeeze(data) #test for 1D spectra
             if data.ndim > 1:
                 # kwargs['transform'] = QTransform(0, -1, 1, 0, 0, data.shape[-2])
-                #for setImage:
+                #NOTE PAE: for setImage:
                 #   use scale = [xPixSize,yPixSize] to calibrate the pixelSize
                 #   use pg.PlotItem.setLabel('bottom', text='x axis title', units='m') 
-                scale0 = (header.descriptors[0]['Calibrations.Dimension.1.Scale'], header.descriptors[0]['Calibrations.Dimension.2.Scale'])
-                units0 = (header.descriptors[0]['Calibrations.Dimension.1.Units'], header.descriptors[0]['Calibrations.Dimension.2.Units'])
+                try:
+                    ftype = header.descriptors[0]['file type']
+                    if ftype == 'dm':
+                        #DM file
+                        scale0 = (header.descriptors[0]['Calibrations.Dimension.1.Scale'], header.descriptors[0]['Calibrations.Dimension.2.Scale'])
+                        units0 = (header.descriptors[0]['Calibrations.Dimension.1.Units'], header.descriptors[0]['Calibrations.Dimension.2.Units'])
+                    elif ftype == 'ser':
+                        #SER file
+                        for cal in header.descriptors[0]['Calibration']:
+                            scale0.append(cal['CalibrationDelta'])
+                            units0.append('m')
+                except:
+                    scale0 = (1,1)
+                    units0 = ('','')
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 self.axesItem.setLabel('bottom', text='X',units=units0[0])
                 self.axesItem.setLabel('left', text='Y',units=units0[1])

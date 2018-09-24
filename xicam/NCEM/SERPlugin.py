@@ -21,8 +21,9 @@ class SERPlugin(DataHandlerPlugin):
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(path):
-        md = ser.fileSER(path).readHeader()
-        return md
+        data,metaData = ser.fileSER(path).getDataset(0)
+        metaData['file type'] = 'ser'
+        return metaData
 
     @classmethod
     def getStartDoc(cls, paths, start_uid):

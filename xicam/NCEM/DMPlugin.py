@@ -77,6 +77,7 @@ class DMPlugin(DataHandlerPlugin):
         md.parseHeader()
         #Save most useful metaData
         metaData = {}
+        metaData['file type'] = 'dm'
         for kk,ii in md.allTags.items():
             #Most useful starting tags
             prefix1 = 'ImageList.{}.ImageTags.'.format(md.numObjects)
