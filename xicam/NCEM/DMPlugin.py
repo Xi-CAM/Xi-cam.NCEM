@@ -20,7 +20,6 @@ class DMPlugin(DataHandlerPlugin):
     descriptor_keys = ['']
 
     def __call__(self, path, index_z, index_t):
-        self.logPAE('call')
 
         aa = dm.fileDM(path)
         aa.parseHeader()
@@ -85,10 +84,10 @@ class DMPlugin(DataHandlerPlugin):
             pos1 = kk.find(prefix1)
             pos2 = kk.find(prefix2)
             if pos1 > -1:
-                sub = kk[pos1+len(prefix):]
+                sub = kk[pos1+len(prefix1):]
                 metaData[sub] = ii
             elif pos2 > -1:
-                sub = kk[pos2+len(prefix):]
+                sub = kk[pos2+len(prefix2):]
                 metaData[sub] = ii
             
             #Remove unneeded keys
@@ -109,7 +108,7 @@ class DMPlugin(DataHandlerPlugin):
                     del metaData[jj]
 
         return metaData
-
+    
     @classmethod
     def getStartDoc(cls, paths, start_uid):
         return start_doc(start_uid=start_uid, metadata={'paths': paths})
