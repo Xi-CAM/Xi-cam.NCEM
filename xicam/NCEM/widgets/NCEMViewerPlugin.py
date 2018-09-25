@@ -71,7 +71,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             msg.logMessage('Header object contained no frames with field ''{field}''.', msg.ERROR)
 
         if data:
-            data = np.squeeze(data) #test for 1D spectra
+            #data = np.squeeze(data) #test for 1D spectra
             if data.ndim > 1:
                 # kwargs['transform'] = QTransform(0, -1, 1, 0, 0, data.shape[-2])
                 #NOTE PAE: for setImage:
