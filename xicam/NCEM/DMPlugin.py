@@ -21,22 +21,26 @@ class DMPlugin(DataHandlerPlugin):
 
     def __call__(self, path, index_z, index_t):
 
-        aa = dm.fileDM(path)
-        aa.parseHeader()
-        im1 = aa.getDataset(0) #Most DM files have only 1 dataset
-
+        dm1 = dm.fileDM(path)
+        dm1.parseHeader()
+        im1 = dm1.getSlice(0,index_t,sliceZ2=index_z) #Most DM files have only 1 dataset
+        
+        '''
         #Need if statements to deal with 2D and 3D and 4D datasets
         if im1['data'].ndim == 2:
             #2D image
             return im1['data']
         elif im1['data'].ndim == 3:
             #3D data set. Volume or image stack
-            return im1['data'][index_t,:,:]
+            return im1['data']#[index_t,:,:]
         elif im1['data'].ndim == 4:
             #Not fully implemented yet. 4D DM4 files are written in
             #written as [kx,ky,Y,X]. We want 
-            return im1['data'][index_z,index_t,:,:]
-    
+            return im1['data']#[index_z,index_t,:,:]
+        '''
+        del dm1
+        return im1['data']
+        
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
@@ -52,9 +56,14 @@ class DMPlugin(DataHandlerPlugin):
         
         Only used for 4D data sets
         '''
-        f = dm.fileDM(path)
-        f.parseHeader()
-        return f.zSize2[1] #use zSize2[1] rather than [0] to skip the thumbnail
+        dm1 = dm.fileDM(path)
+        dm1.parseHeader()
+        if dm1.numObjects > 1:
+            out = dm1.zSize2[1]
+        else:
+            out = dm1.zSize2[0]
+        del dm1
+        return out
 
     @classmethod
     def num_t(self,path):
@@ -66,22 +75,28 @@ class DMPlugin(DataHandlerPlugin):
         image in the stack.
         
         '''
-        f = dm.fileDM(path)
-        f.parseHeader()
-        return f.zSize[1] #use zSize[1] rather than zSize[0] to ignore the thumbnail
+        dm1 = dm.fileDM(path)
+        dm1.parseHeader()
+        if dm1.numObjects > 1:
+            out = dm1.zSize[1]
+        else:
+            out = dm1.zSize[0]
+        out = dm1.zSize[1]
+        del dm1
+        return out
         
     @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(self, path):
-        md = dm.fileDM(path)
-        md.parseHeader()
+        dm1 = dm.fileDM(path)
+        dm1.parseHeader()
         #Save most useful metaData
         metaData = {}
         metaData['file type'] = 'dm'
-        for kk,ii in md.allTags.items():
+        for kk,ii in dm1.allTags.items():
             #Most useful starting tags
-            prefix1 = 'ImageList.{}.ImageTags.'.format(md.numObjects)
-            prefix2 = 'ImageList.{}.ImageData.'.format(md.numObjects)
+            prefix1 = 'ImageList.{}.ImageTags.'.format(dm1.numObjects)
+            prefix2 = 'ImageList.{}.ImageData.'.format(dm1.numObjects)
             pos1 = kk.find(prefix1)
             pos2 = kk.find(prefix2)
             if pos1 > -1:
@@ -107,7 +122,7 @@ class DMPlugin(DataHandlerPlugin):
                     del metaData[jj]
                 elif jj.find('Device.Parameters')>-1:
                     del metaData[jj]
-
+        del dm1
         return metaData
     
     @classmethod
