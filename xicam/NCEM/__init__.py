@@ -10,6 +10,7 @@ from xicam.plugins import GUIPlugin, GUILayout, manager as pluginmanager
 import pyqtgraph as pg
 from functools import partial
 from xicam.gui.widgets.dynimageview import DynImageView
+from .widgets.fourdimageview import FourDImageView
 
 from xicam.gui.widgets.tabview import TabView
 
@@ -28,8 +29,11 @@ class NCEMPlugin(GUIPlugin):
                                                              'WidgetPlugin').plugin_object,
                                           'primary')
 
+        self.fourDview = TabView(self.headermodel, FourDImageView, 'primary')
+
         self.stages = {
             'View': GUILayout(self.rawview,),
+            '4D STEM': GUILayout(self.fourDview, )
         }
         super(NCEMPlugin, self).__init__()
 
