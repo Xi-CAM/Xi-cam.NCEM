@@ -78,6 +78,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 #   use scale = [xPixSize,yPixSize] to calibrate the pixelSize
                 #   use pg.PlotItem.setLabel('bottom', text='x axis title', units='m') 
                 try:
+                    #header.startdoc, header.stopdoc, header.desciptordocs[ii], header.eventdocs[jj]
                     ftype = header.descriptors[0]['file type']
                     if ftype == 'dm':
                         #DM file
@@ -86,6 +87,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                     elif ftype == 'ser':
                         #SER file
                         for cal in header.descriptors[0]['Calibration']:
+                        
                             scale0.append(cal['CalibrationDelta'])
                             units0.append('m')
                 except:
