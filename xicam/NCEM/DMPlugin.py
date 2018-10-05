@@ -43,13 +43,15 @@ class DMPlugin(DataHandlerPlugin):
         
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
+        num_z = cls.num_z(path)
+        num_t = cls.num_t(path)
         for path in paths:
-            for index_z in range(cls.num_z(path)):
-                for index_t in range(cls.num_t(path)):
+            for index_z in range(num_z):
+                for index_t in range(num_t):
                     yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path, index_z, index_t))
 
-    @classmethod
-    def num_z(self,path):
+    @staticmethod
+    def num_z(path):
         '''The number of slizes along axis 2 (start at 0) (C-ordering)
         for 4D data sets. Not used for 3D data sets
         
@@ -65,8 +67,8 @@ class DMPlugin(DataHandlerPlugin):
         del dm1
         return out
 
-    @classmethod
-    def num_t(self,path):
+    @staticmethod
+    def num_t(path):
         '''The number of slices in the first dimension (C-ordering) for 3D
         datasets
         
@@ -87,7 +89,7 @@ class DMPlugin(DataHandlerPlugin):
         
     @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
-    def parseDataFile(self, path):
+    def parseDataFile(cls, path):
         dm1 = dm.fileDM(path)
         dm1.parseHeader()
         #Save most useful metaData
@@ -134,6 +136,7 @@ class DMPlugin(DataHandlerPlugin):
         metadata = cls.parseTXTFile(paths[0])
         metadata.update(cls.parseDataFile(paths[0]))
 
+        
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
