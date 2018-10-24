@@ -86,6 +86,8 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                         units0 = (header.descriptors[0]['Calibrations.Dimension.1.Units'], header.descriptors[0]['Calibrations.Dimension.2.Units'])
                     elif ftype == 'ser':
                         #SER file
+                        scale0 = []
+                        units0 = []
                         for cal in header.descriptors[0]['Calibration']:
                         
                             scale0.append(cal['CalibrationDelta'])

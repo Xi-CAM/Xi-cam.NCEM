@@ -9,7 +9,6 @@ import functools
 from pathlib import Path
 from ncempy.io import dm
 
-
 # TODO: ask peter to add __enter__ and 'with' support to NCEMPY's dm module
 
 class DMPlugin(DataHandlerPlugin):
@@ -43,16 +42,16 @@ class DMPlugin(DataHandlerPlugin):
         
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
-        num_z = cls.num_z(path)
-        num_t = cls.num_t(path)
         for path in paths:
+            num_z = cls.num_z(path)
+            num_t = cls.num_t(path)
             for index_z in range(num_z):
                 for index_t in range(num_t):
                     yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path, index_z, index_t))
 
     @staticmethod
     def num_z(path):
-        '''The number of slizes along axis 2 (start at 0) (C-ordering)
+        '''The number of slices along axis 2 (start at 0) (C-ordering)
         for 4D data sets. Not used for 3D data sets
         
         
@@ -73,7 +72,7 @@ class DMPlugin(DataHandlerPlugin):
         datasets
         
         This is the number of slices along the "Z" axis. For a 3D volume
-        this is is a slize long Z. For an image stack this is the requested
+        this is is a slice long Z. For an image stack this is the requested
         image in the stack.
         
         '''
