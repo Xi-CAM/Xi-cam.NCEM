@@ -21,7 +21,7 @@ class DMPlugin(DataHandlerPlugin):
     def __call__(self, path, index_z, index_t):
 
         dm1 = dm.fileDM(path)
-        dm1.parseHeader()
+        #dm1.parseHeader()
         im1 = dm1.getSlice(0,index_t,sliceZ2=index_z) #Most DM files have only 1 dataset
         
         '''
@@ -51,14 +51,14 @@ class DMPlugin(DataHandlerPlugin):
 
     @staticmethod
     def num_z(path):
-        '''The number of slices along axis 2 (start at 0) (C-ordering)
+        '''The number of slices along axis 1 (start at 0) (C-ordering)
         for 4D data sets. Not used for 3D data sets
         
         
         Only used for 4D data sets
         '''
         dm1 = dm.fileDM(path)
-        dm1.parseHeader()
+        #dm1.parseHeader()
         if dm1.numObjects > 1:
             out = dm1.zSize2[1]
         else:
@@ -77,7 +77,7 @@ class DMPlugin(DataHandlerPlugin):
         
         '''
         dm1 = dm.fileDM(path)
-        dm1.parseHeader()
+        #dm1.parseHeader()
         if dm1.numObjects > 1:
             out = dm1.zSize[1]
         else:
@@ -90,7 +90,7 @@ class DMPlugin(DataHandlerPlugin):
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(cls, path):
         dm1 = dm.fileDM(path)
-        dm1.parseHeader()
+        #dm1.parseHeader()
         #Save most useful metaData
         metaData = {}
         metaData['file type'] = 'dm'
