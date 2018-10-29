@@ -9,7 +9,7 @@ import functools
 from pathlib import Path
 from ncempy.io import dm
 
-# TODO: ask peter to add __enter__ and 'with' support to NCEMPY's dm module
+# TODO: add __enter__ and 'with' support to this plugin
 
 class DMPlugin(DataHandlerPlugin):
     name = 'DMPlugin'

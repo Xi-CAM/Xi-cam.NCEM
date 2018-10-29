@@ -10,6 +10,8 @@ from pathlib import Path
 from ncempy.io import ser
 from xicam.core import msg
 
+# TODO: add __enter__ and 'with' support to this plugin
+
 class SERPlugin(DataHandlerPlugin):
     '''SER files that contain spectra are currently not supported.
     
