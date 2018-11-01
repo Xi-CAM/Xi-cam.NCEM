@@ -51,7 +51,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='synchrotron analysis x-ray scattering tomography ',
+    keywords='Electron Microscopy data viewing and analysis',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
@@ -67,7 +67,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['ncempy'],
+    install_requires=['ncempy>=1.3.0'],
 
     setup_requires=[],
 
