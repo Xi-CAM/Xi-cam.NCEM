@@ -8,6 +8,7 @@ import re
 import functools
 from pathlib import Path
 from ncempy.io import dm
+from xicam.core import msg
 
 # TODO: add __enter__ and 'with' support to this plugin
 
@@ -21,7 +22,7 @@ class DMPlugin(DataHandlerPlugin):
     def __call__(self, path, index_z, index_t):
 
         dm1 = dm.fileDM(path)
-        #dm1.parseHeader()
+        
         im1 = dm1.getSlice(0,index_t,sliceZ2=index_z) #Most DM files have only 1 dataset
         
         '''
@@ -58,7 +59,7 @@ class DMPlugin(DataHandlerPlugin):
         Only used for 4D data sets
         '''
         dm1 = dm.fileDM(path)
-        #dm1.parseHeader()
+                       
         if dm1.numObjects > 1:
             out = dm1.zSize2[1]
         else:
@@ -77,12 +78,12 @@ class DMPlugin(DataHandlerPlugin):
         
         '''
         dm1 = dm.fileDM(path)
-        #dm1.parseHeader()
+        
         if dm1.numObjects > 1:
             out = dm1.zSize[1]
         else:
             out = dm1.zSize[0]
-        out = dm1.zSize[1]
+        #out = dm1.zSize[1]
         del dm1
         return out
         
@@ -90,7 +91,7 @@ class DMPlugin(DataHandlerPlugin):
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(cls, path):
         dm1 = dm.fileDM(path)
-        #dm1.parseHeader()
+        
         #Save most useful metaData
         metaData = {}
         metaData['file type'] = 'dm'
