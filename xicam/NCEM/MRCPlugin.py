@@ -22,10 +22,6 @@ class MRCPlugin(DataHandlerPlugin):
         with mrc.fileMRC(path) as mrc1:
             im1 = mrc1.getSlice(index_t)
         
-        #mrc1 = mrc.fileMRC(path)
-        #im1 = mrc1.getSlice(index_t)
-        #del mrc1
-        
         return im1
         
     @classmethod
@@ -54,8 +50,6 @@ class MRCPlugin(DataHandlerPlugin):
         with mrc.fileMRC(path) as mrc1:
             out = mrc1.dataSize[0]
         
-        #mrc1 = mrc.fileMRC(path)
-        #out = mrc1.dataSize[0]
         return out
         
     @classmethod
