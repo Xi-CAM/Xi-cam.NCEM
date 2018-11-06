@@ -19,12 +19,12 @@ class MRCPlugin(DataHandlerPlugin):
 
     def __call__(self, path, index_t):
 
-        #with mrc.fileMRC as mrc1:
-        #    im1 = mrc1.getSlice(0,index_t)
+        with mrc.fileMRC(path) as mrc1:
+            im1 = mrc1.getSlice(index_t)
         
-        mrc1 = mrc.fileMRC(path)
-        im1 = mrc1.getSlice(index_t)
-        del mrc1
+        #mrc1 = mrc.fileMRC(path)
+        #im1 = mrc1.getSlice(index_t)
+        #del mrc1
         
         return im1
         
@@ -51,11 +51,11 @@ class MRCPlugin(DataHandlerPlugin):
         '''The number of slices in the first dimension (C-ordering)
         
         '''
-        #with mrc.fileMRC(path) as mrc1:
-        #    out = mrc1.dataSize[0]
+        with mrc.fileMRC(path) as mrc1:
+            out = mrc1.dataSize[0]
         
-        mrc1 = mrc.fileMRC(path)
-        out = mrc1.dataSize[0]
+        #mrc1 = mrc.fileMRC(path)
+        #out = mrc1.dataSize[0]
         return out
         
     @classmethod
