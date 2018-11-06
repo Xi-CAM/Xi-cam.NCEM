@@ -77,6 +77,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 #NOTE PAE: for setImage:
                 #   use scale = [xPixSize,yPixSize] to calibrate the pixelSize
                 #   use pg.PlotItem.setLabel('bottom', text='x axis title', units='m') 
+                #   use setImage(xVals=timeVals) to set the values on the slider for 3D data
                 try:
                     #header.startdoc, header.stopdoc, header.desciptordocs[ii], header.eventdocs[jj]
                     ftype = header.descriptors[0]['file type']
@@ -89,12 +90,17 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                         scale0 = []
                         units0 = []
                         for cal in header.descriptors[0]['Calibration']:
-                        
                             scale0.append(cal['CalibrationDelta'])
                             units0.append('m')
+                    elif ftype == 'mrc':
+                        scale0 = header.descriptors[0]['pixelSize'][1:3]*1e-10 #change to meters
+                        units0 = ['m','m']
+                    else:
+                        scale0 = [1,1]
+                        units0 = ['','']
                 except:
-                    scale0 = (1,1)
-                    units0 = ('','')
+                    scale0 = [1,1]
+                    units0 = ['','']
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 self.axesItem.setLabel('bottom', text='X',units=units0[0])
                 self.axesItem.setLabel('left', text='Y',units=units0[1])
