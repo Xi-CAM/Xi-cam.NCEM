@@ -23,13 +23,16 @@ class NCEMPlugin(GUIPlugin):
         # Data model
         self.headermodel = QStandardItemModel()
 
+        # Selection model
+        self.selectionmodel = QItemSelectionModel()
+
         # Setup TabViews
-        self.rawview = TabView(self.headermodel,
+        self.rawview = TabView(self.headermodel, self.selectionmodel,
                                pluginmanager.getPluginByName('NCEMViewerPlugin',
                                                              'WidgetPlugin').plugin_object,
                                           'primary')
 
-        self.fourDview = TabView(self.headermodel, FourDImageView, 'primary')
+        self.fourDview = TabView(self.headermodel, self.selectionmodel, FourDImageView, 'primary')
 
         self.stages = {
             'View': GUILayout(self.rawview,),

@@ -10,6 +10,7 @@ from pathlib import Path
 from ncempy.io import ser
 from xicam.core import msg
 
+
 # TODO: add __enter__ and 'with' support to this plugin
 
 class SERPlugin(DataHandlerPlugin):
@@ -20,7 +21,7 @@ class SERPlugin(DataHandlerPlugin):
     name = 'SERPlugin'
 
     DEFAULT_EXTENTIONS = ['.ser']
-    
+
     descriptor_keys = ['']
 
     def __call__(self, path, index_z, index_t):
@@ -28,12 +29,12 @@ class SERPlugin(DataHandlerPlugin):
         im1 = ser1.getDataset(index_t)[0]
         del ser1
         return im1
-    
+
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         msg.logMessage('SER getEventDocs called')
         for path in paths:
-            num_z = cls.num_z(path) #ser files can only be 3D (no 4D)
+            num_z = cls.num_z(path)  # ser files can only be 3D (no 4D)
             num_t = cls.num_t(path)
             for index_z in range(num_z):
                 for index_t in range(num_t):
@@ -59,15 +60,15 @@ class SERPlugin(DataHandlerPlugin):
         
         Note: Each data set can have a different X-Y size. Its rare but possible.        
         '''
-        
+
         ser1 = ser.fileSER(path)
         if ser1.head['DataTypeID'] == 16674:
-            #2D data sets (images)
+            # 2D data sets (images)
             out = ser1.head['ValidNumberElements']
         elif ser1.head['DataTypeID'] == 16672:
-            #1D data sets (currently unsupported)
+            # 1D data sets (currently unsupported)
             out = ser1.head['ValidNumberElements']
-            
+
         del ser1
         return out    
     
@@ -75,21 +76,21 @@ class SERPlugin(DataHandlerPlugin):
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(path):
         ser1 = ser.fileSER(path)
-        data,metaData = ser1.getDataset(0)
+        data, metaData = ser1.getDataset(0)
         del ser1
         metaData['file type'] = 'ser'
-        
+
         return metaData
 
     @classmethod
     def getStartDoc(cls, paths, start_uid):
         return start_doc(start_uid=start_uid, metadata={'paths': paths})
-        
+
     @classmethod
     def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
         metadata = cls.parseTXTFile(paths[0])
         metadata.update(cls.parseDataFile(paths[0]))
-        
+
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
