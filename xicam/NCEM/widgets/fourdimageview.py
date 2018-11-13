@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import *
 import pyqtgraph as pg
 import numpy as np
-
+from ncempy.io import dm
 
 class FourDImageView(QWidget):
     def __init__(self, *args, **kwargs):
@@ -37,11 +37,11 @@ class FourDImageView(QWidget):
                                                    int(self.RSroi.pos().x() + self.RSroi.size().x()),
                                          int(self.RSroi.pos().y()):
                                          int(self.RSroi.pos().y() + self.RSroi.size().y()), :, :], axis=(1, 0)))
-        self.RSimageview.setImage(np.sum(self.data[:, :,
+        self.RSimageview.setImage(np.log(np.sum(self.data[:, :,
                                          int(self.DProi.pos().x()):
                                          int(self.DProi.pos().x() + self.DProi.size().x()),
                                          int(self.DProi.pos().y()):
-                                         int(self.DProi.pos().y() + self.DProi.size().y())], axis=(3, 2)))
+                                         int(self.DProi.pos().y() + self.DProi.size().y())], axis=(3, 2))+1))
 
 
 if __name__ == '__main__':
@@ -50,7 +50,10 @@ if __name__ == '__main__':
     fdview = FourDImageView()
     fdview.show()
 
-    data = np.fromfunction(lambda x, y, kx, ky: (x - kx) ** 2 + (y - ky) ** 2, (20, 20, 512, 512))
+    data = dm.dmReader('G:/My Drive/Te_Nanoparticles_shared/20181002/4DSTEM_DataSets/5_Te_15x83_ss=3nm_CL=245_alpha=p48_p06sec_no beamstop_bin4_300kV.dm4')['data']
+    data = data.reshape((15,83,512,512))
+
+    #data = np.fromfunction(lambda x, y, kx, ky: (x - kx) ** 2 + (y - ky) ** 2, (20, 20, 512, 512))
     fdview.setData(data)
 
     qapp.exec_()
