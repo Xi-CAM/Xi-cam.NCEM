@@ -71,5 +71,40 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             msg.logMessage('Header object contained no frames with field ''{field}''.', msg.ERROR)
 
         if data:
-            # kwargs['transform'] = QTransform(0, -1, 1, 0, 0, data.shape[-2])
-            super(NCEMViewerPlugin, self).setImage(img=data, *args, **kwargs)
+            # data = np.squeeze(data) #test for 1D spectra
+            if data.ndim > 1:
+                # kwargs['transform'] = QTransform(0, -1, 1, 0, 0, data.shape[-2])
+                #NOTE PAE: for setImage:
+                #   use scale = [xPixSize,yPixSize] to calibrate the pixelSize
+                #   use pg.PlotItem.setLabel('bottom', text='x axis title', units='m') 
+                #   use setImage(xVals=timeVals) to set the values on the slider for 3D data
+                try:
+                    # header.startdoc, header.stopdoc, header.desciptordocs[ii], header.eventdocs[jj]
+                    ftype = header.descriptors[0]['file type']
+                    if ftype == 'dm':
+                        # DM file
+                        scale0 = (header.descriptors[0]['Calibrations.Dimension.1.Scale'],
+                                  header.descriptors[0]['Calibrations.Dimension.2.Scale'])
+                        units0 = (header.descriptors[0]['Calibrations.Dimension.1.Units'],
+                                  header.descriptors[0]['Calibrations.Dimension.2.Units'])
+                    elif ftype == 'ser':
+                        # SER file
+                        scale0 = []
+                        units0 = []
+                        for cal in header.descriptors[0]['Calibration']:
+                            scale0.append(cal['CalibrationDelta'])
+                            units0.append('m')
+                    elif ftype == 'mrc':
+                        scale0 = header.descriptors[0]['pixelSize'][1:3] * 1e-10  # change to meters
+                        units0 = ['m', 'm']
+                    else:
+                        scale0 = [1, 1]
+                        units0 = ['', '']
+                except:
+                    scale0 = [1, 1]
+                    units0 = ['', '']
+                super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
+                self.axesItem.setLabel('bottom', text='X', units=units0[0])
+                self.axesItem.setLabel('left', text='Y', units=units0[1])
+            #else:
+            #    msg.logMessage('Cant load 1D data.')

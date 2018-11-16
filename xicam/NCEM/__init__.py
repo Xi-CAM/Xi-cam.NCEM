@@ -10,6 +10,7 @@ from xicam.plugins import GUIPlugin, GUILayout, manager as pluginmanager
 import pyqtgraph as pg
 from functools import partial
 from xicam.gui.widgets.dynimageview import DynImageView
+from .widgets.fourdimageview import FourDImageView
 
 from xicam.gui.widgets.tabview import TabView
 
@@ -22,14 +23,20 @@ class NCEMPlugin(GUIPlugin):
         # Data model
         self.headermodel = QStandardItemModel()
 
+        # Selection model
+        self.selectionmodel = QItemSelectionModel()
+
         # Setup TabViews
-        self.rawview = TabView(self.headermodel,
+        self.rawview = TabView(self.headermodel, self.selectionmodel,
                                pluginmanager.getPluginByName('NCEMViewerPlugin',
                                                              'WidgetPlugin').plugin_object,
                                           'primary')
 
+        self.fourDview = TabView(self.headermodel, self.selectionmodel, FourDImageView, 'primary')
+
         self.stages = {
             'View': GUILayout(self.rawview,),
+            '4D STEM': GUILayout(self.fourDview, )
         }
         super(NCEMPlugin, self).__init__()
 
