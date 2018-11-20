@@ -7,6 +7,9 @@ from pathlib import Path
 
 class FourDImageView(QWidget):
     def __init__(self, *args, **kwargs):
+        
+        #kwargs['dataSize'] = self.dataSize
+        
         super(FourDImageView, self).__init__(*args, *kwargs)
         self.DPimageview = pg.ImageView()
         self.RSimageview = pg.ImageView()
@@ -30,6 +33,13 @@ class FourDImageView(QWidget):
 
     def setData(self, data):
         self.data = data
+        
+        #THis does not work...
+        #self.DPlimit = QRectF(0,0,data.shape[2],data.shape[3])
+        #self.RSlimit = QRectF(0,0,data.shape[0],data.shape[1])
+        #self.DProi.maxbounds = self.DPlimit
+        #self.RSroi.maxbounds = self.RSlimit
+        
         self.update()
 
     def update(self, *_, **__):
