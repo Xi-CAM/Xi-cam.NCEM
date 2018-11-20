@@ -1,7 +1,9 @@
 from qtpy.QtWidgets import *
+from qtpy.QtCore import QRect, QRectF
 import pyqtgraph as pg
 import numpy as np
 from ncempy.io import dm
+from pathlib import Path
 
 class FourDImageView(QWidget):
     def __init__(self, *args, **kwargs):
@@ -12,9 +14,12 @@ class FourDImageView(QWidget):
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.DPimageview)
         self.layout().addWidget(self.RSimageview)
-
-        self.DProi = pg.RectROI(pos=(0, 0), size=(2, 2), translateSnap=True, snapSize=1, scaleSnap=True)
-        self.RSroi = pg.RectROI(pos=(0, 0), size=(2, 2), translateSnap=True, snapSize=1, scaleSnap=True)
+        
+        DPlimit = QRectF(0,0,512,512)
+        RSlimit = QRectF(0,0,10,50)
+        
+        self.DProi = pg.RectROI(pos=(0, 0), size=(10, 10), translateSnap=True, snapSize=1, scaleSnap=True,maxBounds=DPlimit)
+        self.RSroi = pg.RectROI(pos=(0, 0), size=(2, 2), translateSnap=True, snapSize=1, scaleSnap=True,maxBounds=RSlimit)
         self.DProi.sigRegionChanged.connect(self.update)
         self.RSroi.sigRegionChanged.connect(self.update)
 
@@ -22,11 +27,6 @@ class FourDImageView(QWidget):
         DPview.addItem(self.DProi)
         RSview = self.RSimageview.view  # type: pg.ViewBox
         RSview.addItem(self.RSroi)
-
-        # self.x = 0
-        # self.y = 0
-        # self.kx = 0
-        # self.ky = 0
 
     def setData(self, data):
         self.data = data
@@ -45,13 +45,26 @@ class FourDImageView(QWidget):
 
 
 if __name__ == '__main__':
+    #Try to load the data
+    dPath = Path(r'C:\Users\Peter\Data\Te NP 4D-STEM')
+    fPath = Path('07_45x8 ss=5nm_spot11_CL=100 0p1s_alpha=4p63mrad_bin=4_300kV.dm4')
+    with dm.fileDM((dPath / fPath).as_posix()) as dm1:
+        try:
+            scanI = int(dm1.allTags['.ImageList.2.ImageTags.Series.nimagesx'])
+            scanJ = int(dm1.allTags['.ImageList.2.ImageTags.Series.nimagesy'])
+            im1 = dm1.getDataset(0)
+            numkI = im1['data'].shape[2]
+            numkJ = im1['data'].shape[1]
+
+            data = im1['data'].reshape([scanJ,scanI,numkJ,numkI])
+        except:
+            raise
+            print('Data is not a 4D DM3 or DM4 stack.')
+        
     qapp = QApplication([])
 
     fdview = FourDImageView()
     fdview.show()
-    
-    data = dm.dmReader(r'C:\Users\Peter\Data\Te NP 4D-STEM\07_45x8 ss=5nm_spot11_CL=100 0p1s_alpha=4p63mrad_bin=4_300kV.dm4')['data']
-    data = data.reshape((10,50,512,512))
     
     #data = np.fromfunction(lambda x, y, kx, ky: (x - kx) ** 2 + (y - ky) ** 2, (20, 20, 512, 512))
 
