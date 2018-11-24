@@ -18,11 +18,8 @@ class FourDImageView(QWidget):
         self.layout().addWidget(self.DPimageview)
         self.layout().addWidget(self.RSimageview)
         
-        DPlimit = QRectF(0,0,512,512)
-        RSlimit = QRectF(0,0,10,50)
-        
-        self.DProi = pg.RectROI(pos=(0, 0), size=(10, 10), translateSnap=True, snapSize=1, scaleSnap=True,maxBounds=DPlimit)
-        self.RSroi = pg.RectROI(pos=(0, 0), size=(2, 2), translateSnap=True, snapSize=1, scaleSnap=True,maxBounds=RSlimit)
+        self.DProi = pg.RectROI(pos=(0, 0), size=(10, 10), translateSnap=True, snapSize=1, scaleSnap=True)
+        self.RSroi = pg.RectROI(pos=(0, 0), size=(2, 2), translateSnap=True, snapSize=1, scaleSnap=True)
         self.DProi.sigRegionChanged.connect(self.update)
         self.RSroi.sigRegionChanged.connect(self.update)
 
@@ -34,11 +31,10 @@ class FourDImageView(QWidget):
     def setData(self, data):
         self.data = data
         
-        #THis does not work...
-        #self.DPlimit = QRectF(0,0,data.shape[2],data.shape[3])
-        #self.RSlimit = QRectF(0,0,data.shape[0],data.shape[1])
-        #self.DProi.maxbounds = self.DPlimit
-        #self.RSroi.maxbounds = self.RSlimit
+        self.DPlimit = QRectF(0,0,data.shape[2],data.shape[3])
+        self.RSlimit = QRectF(0,0,data.shape[0],data.shape[1])
+        self.DProi.maxBounds = self.DPlimit
+        self.RSroi.maxBounds = self.RSlimit
         
         self.update()
 
@@ -56,7 +52,7 @@ class FourDImageView(QWidget):
 
 if __name__ == '__main__':
     #Try to load the data
-    dPath = Path(r'C:\Users\Peter\Data\Te NP 4D-STEM')
+    dPath = Path(r'C:\Users\Peter.000\Data\Te NP 4D-STEM')
     fPath = Path('07_45x8 ss=5nm_spot11_CL=100 0p1s_alpha=4p63mrad_bin=4_300kV.dm4')
     with dm.fileDM((dPath / fPath).as_posix()) as dm1:
         try:
