@@ -47,7 +47,7 @@ class EMDPlugin(DataHandlerPlugin):
                 elif dataset0.ndim == 3:
                     im1 = dataset0[index_t,:,:]
                 elif dataset0.ndim == 4:
-                    im1 = dataset0[0,index_t,:,:]
+                    im1 = dataset0[index_t,0,:,:]
                 else:
                     msg.logMessage('EMD: Only 1D-4D EMD Berkeley data sets are supported.')
         except IndexError:
@@ -104,11 +104,11 @@ class EMDPlugin(DataHandlerPlugin):
         try:
             with emd.fileEMD(path) as emd1:
                 dataset0 = emd1.list_emds[0]['data'] #get the dataset in the first group found
-
                 out = dataset0.shape[0]
         except IndexError:
             veloxFlag = True
         except:
+            veloxFlag = True
             raise
         
         if veloxFlag:
@@ -119,8 +119,8 @@ class EMDPlugin(DataHandlerPlugin):
                     dsetGroups = list(f1['Data/Image'].values())
                     out = dsetGroups[0]['Data'].shape[-1] #Velox files are written incorrectly using Fortran ordering
             except:
+                out = None
                 raise
-                out = 0
         return out
 
     @classmethod
@@ -131,9 +131,7 @@ class EMDPlugin(DataHandlerPlugin):
         #Open as Berkelely EMD file
         try:
             with emd.fileEMD(path) as emd1:
-                dataset0 = emd1.list_emds[0]
-                
-                # Save most useful metaData
+                dataGroup = emd1.list_emds[0]
                 metaData['file type'] = 'emd berkeley'
                 
                 try:
@@ -153,43 +151,54 @@ class EMDPlugin(DataHandlerPlugin):
                 except:
                     pass
                 
-                #metaData.update()
-                if dataset0['data'].ndim == 2:
+                if dataGroup['data'].ndim == 2:
                     dimY = emd1.list_emds[0]['dim1']
                     dimX = emd1.list_emds[0]['dim2']
                     metaData['pixelSize'] = [dimY[1]-dimY[0],dimX[1]-dimX[0]]  # the pixel sizes as a list
-                elif dataset0['data'].ndim == 3:
+                elif dataGroup['data'].ndim == 3:
                     dimY = emd1.list_emds[0]['dim2']
                     dimX = emd1.list_emds[0]['dim3']
                     metaData['pixelSize'] = [dimY[1]-dimY[0],dimX[1]-dimX[0]]  # the pixel sizes as a list
+                elif dataGroup['data'].ndim == 4:
+                    dimY = emd1.list_emds[0]['dim3']
+                    dimX = emd1.list_emds[0]['dim4']
+                    metaData['pixelSize'] = [dimY[1]-dimY[0],dimX[1]-dimX[0]]  # the pixel sizes as a list
+                else:
+                    metaData['pixelSize'] = [1,1]
+                    
         except IndexError:
             msg.logMessage('EMD: No emd_dataset tags detected.')
             veloxFlag = True
         except:
+            veloxFlag = True
             raise
             
         #Open as Velox file
-        try:
-            with h5py.File(path,'r') as f1:
-                f1Im = f1['Data/Image']
-                #Get all of the groups in the Image group
-                dsetGroups = list(f1['Data/Image'].values())
-                
-                #Parse metadata
-                pixelSizeX = []
-                pixelSizeY = []
-                detectorName = []
-                image = dsetGroups[0]
-                mData = image['Metadata'][:,0] #get the metadata
-                validMetaDataIndex = np.where(mData > 0) #find valid metadata
-                mData = mData[validMetaDataIndex].tostring() #change to string
-                jj = json.loads(mData.decode('utf-8','ignore')) #load UTF-8 string as JSON and output dict
-                detectorName.append(jj['BinaryResult']['Detector'])
-                pixelSizeX.append(float(jj['BinaryResult']['PixelSize']['width'])*1e9) #change to nm
-                pixelSizeY.append(float(jj['BinaryResult']['PixelSize']['height'])*1e9) #change to nm
-                metaData['pixelSize'] = [pixelSizeX,pixelSizeY]
-        except:
-            metaData = {}
+        if veloxFlag:
+            try:
+                with h5py.File(path,'r') as f1:
+                    f1Im = f1['Data/Image']
+                    #Get all of the groups in the Image group
+                    dsetGroups = list(f1['Data/Image'].values())
+                    
+                    #Parse metadata
+                    pixelSizeX = []
+                    pixelSizeY = []
+                    detectorName = []
+                    image = dsetGroups[0]
+                    mData = image['Metadata'][:,0] #get the metadata
+                    validMetaDataIndex = np.where(mData > 0) #find valid metadata
+                    mData = mData[validMetaDataIndex].tostring() #change to string
+                    jj = json.loads(mData.decode('utf-8','ignore')) #load UTF-8 string as JSON and output dict
+                    detectorName.append(jj['BinaryResult']['Detector'])
+                    pixelSizeX.append(float(jj['BinaryResult']['PixelSize']['width'])*1e9) #change to nm
+                    pixelSizeY.append(float(jj['BinaryResult']['PixelSize']['height'])*1e9) #change to nm
+                    metaData['pixelSize'] = [pixelSizeX,pixelSizeY]
+
+                    metaData['file type'] = 'emd velox'
+            except:
+                raise
+
         return metaData
 
     @classmethod
