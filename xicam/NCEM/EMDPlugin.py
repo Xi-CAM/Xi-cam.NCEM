@@ -43,11 +43,11 @@ class EMDPlugin(DataHandlerPlugin):
                 dataset0 = emd1.list_emds[0]['data'] #get the dataset in the first group found
                 
                 if dataset0.ndim == 2:
-                    im1 = dataset0['data']
+                    im1 = dataset0
                 elif dataset0.ndim == 3:
-                    im1 = dataset0['data'][index_t,:,:]
+                    im1 = dataset0[index_t,:,:]
                 elif dataset0.ndim == 4:
-                    im1 = dataset0['data'][0,index_t,:,:]
+                    im1 = dataset0[0,index_t,:,:]
                 else:
                     msg.logMessage('EMD: Only 1D-4D EMD Berkeley data sets are supported.')
         except IndexError:
@@ -138,19 +138,27 @@ class EMDPlugin(DataHandlerPlugin):
                 
                 try:
                     metaData.update(emd1.file_hdl['/user'].attrs)
+                except:
+                    pass
                 try:
                     metaData.update(emd1.file_hdl['/microscope'].attrs)
+                except:
+                    pass
                 try:
                     metaData.update(emd1.file_hdl['/sample'].attrs)
+                except:
+                    pass
                 try:
                     metaData.update(emd1.file_hdl['/comments'].attrs)
+                except:
+                    pass
                 
                 #metaData.update()
-                if dataset0.ndim == 2:
+                if dataset0['data'].ndim == 2:
                     dimY = emd1.list_emds[0]['dim1']
                     dimX = emd1.list_emds[0]['dim2']
                     metaData['pixelSize'] = [dimY[1]-dimY[0],dimX[1]-dimX[0]]  # the pixel sizes as a list
-                elif dataset0.ndim == 3:
+                elif dataset0['data'].ndim == 3:
                     dimY = emd1.list_emds[0]['dim2']
                     dimX = emd1.list_emds[0]['dim3']
                     metaData['pixelSize'] = [dimY[1]-dimY[0],dimX[1]-dimX[0]]  # the pixel sizes as a list
@@ -180,6 +188,8 @@ class EMDPlugin(DataHandlerPlugin):
                 pixelSizeX.append(float(jj['BinaryResult']['PixelSize']['width'])*1e9) #change to nm
                 pixelSizeY.append(float(jj['BinaryResult']['PixelSize']['height'])*1e9) #change to nm
                 metaData['pixelSize'] = [pixelSizeX,pixelSizeY]
+        except:
+            metaData = {}
         return metaData
 
     @classmethod
