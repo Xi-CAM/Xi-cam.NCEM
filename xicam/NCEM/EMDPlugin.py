@@ -25,6 +25,7 @@ from xicam.core import msg
 import numpy as np
 from ncempy.io import emd #EMD BErkeley datasets
 import h5py #for EMD Velox data sets
+import h5py_cache #for EMD velox files to improve reading performance
 
 class EMDPlugin(DataHandlerPlugin):
     name = 'EMDPlugin'
@@ -32,7 +33,7 @@ class EMDPlugin(DataHandlerPlugin):
     DEFAULT_EXTENTIONS = ['.emd']
 
     descriptor_keys = ['']
-
+    
     def __call__(self, path, index_t):
         veloxFlag = False
         im1 = None
@@ -58,12 +59,15 @@ class EMDPlugin(DataHandlerPlugin):
         #Open as Velox EMD file. Only supports 1 data set currently
         if veloxFlag:
             try:
-                with h5py.File(path,'r') as f1:
+                #with h5py.File(path,'r') as f1:
+                with h5py_cache.File(path,'r',chunk_cache_mem_size=5*1024**2) as f1:
                     f1Im = f1['Data/Image']
                     #Get all of the groups in the Image group
                     dsetGroups = list(f1['Data/Image'].values())
                     
-                    im1 = dsetGroups[0]['Data'][:,:,index_t] #Velox data is written incorrectly with Fortran ordering
+                    #Velox data is written incorrectly with Fortran ordering
+                    #Also, use an indexing trick [:,:,0:1] to make h5py indexing much faster
+                    im1 = dsetGroups[0]['Data'][:,:,index_t:index_t+1].squeeze()
             except KeyError:
                 msg.logMessage('EMD: No Velox Image group detected.')
                 raise
@@ -113,7 +117,8 @@ class EMDPlugin(DataHandlerPlugin):
         
         if veloxFlag:
             try:
-                with h5py.File(path,'r') as f1:
+                #with h5py.File(path,'r') as f1:
+                with h5py_cache.File(path,'r',chunk_cache_mem_size=5*1024**2) as f1:
                     f1Im = f1['Data/Image']
                     #Get all of the groups in the Image group
                     dsetGroups = list(f1['Data/Image'].values())
@@ -176,7 +181,8 @@ class EMDPlugin(DataHandlerPlugin):
         #Open as Velox file
         if veloxFlag:
             try:
-                with h5py.File(path,'r') as f1:
+                #with h5py.File(path,'r') as f1:
+                with h5py_cache.File(path,'r',chunk_cache_mem_size=5*1024**2) as f1:
                     f1Im = f1['Data/Image']
                     #Get all of the groups in the Image group
                     dsetGroups = list(f1['Data/Image'].values())
