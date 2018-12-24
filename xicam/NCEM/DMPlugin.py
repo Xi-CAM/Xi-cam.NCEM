@@ -20,25 +20,10 @@ class DMPlugin(DataHandlerPlugin):
     descriptor_keys = ['']
 
     def __call__(self, path, index_z, index_t):
+        
+        with dm.fileDM(path) as dm1:
+            im1 = dm1.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
 
-        dm1 = dm.fileDM(path)
-
-        im1 = dm1.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
-
-        '''
-        #Need if statements to deal with 2D and 3D and 4D datasets
-        if im1['data'].ndim == 2:
-            #2D image
-            return im1['data']
-        elif im1['data'].ndim == 3:
-            #3D data set. Volume or image stack
-            return im1['data']#[index_t,:,:]
-        elif im1['data'].ndim == 4:
-            #Not fully implemented yet. 4D DM4 files are written in
-            #written as [kx,ky,Y,X]. We want 
-            return im1['data']#[index_z,index_t,:,:]
-        '''
-        del dm1
         return im1['data']
         
     @classmethod
@@ -58,13 +43,11 @@ class DMPlugin(DataHandlerPlugin):
         
         Only used for 4D data sets
         '''
-        dm1 = dm.fileDM(path)
-
-        if dm1.numObjects > 1:
-            out = dm1.zSize2[1]
-        else:
-            out = dm1.zSize2[0]
-        del dm1
+        with dm.fileDM(path) as dm1:
+            if dm1.numObjects > 1:
+                out = dm1.zSize2[1]
+            else:
+                out = dm1.zSize2[0]
         return out
 
     @staticmethod
@@ -77,54 +60,49 @@ class DMPlugin(DataHandlerPlugin):
         image in the stack.
         
         '''
-        dm1 = dm.fileDM(path)
-
-        if dm1.numObjects > 1:
-            out = dm1.zSize[1]
-        else:
-            out = dm1.zSize[0]
-        # out = dm1.zSize[1]
-        del dm1
+        with dm.fileDM(path) as dm1:
+            if dm1.numObjects > 1:
+                out = dm1.zSize[1]
+            else:
+                out = dm1.zSize[0]
         return out
         
     @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(cls, path):
-        dm1 = dm.fileDM(path)
+        with dm.fileDM(path) as dm1:
+            # Save most useful metaData
+            metaData = {}
+            metaData['file type'] = 'dm'
+            for kk, ii in dm1.allTags.items():
+                # Most useful starting tags
+                prefix1 = 'ImageList.{}.ImageTags.'.format(dm1.numObjects)
+                prefix2 = 'ImageList.{}.ImageData.'.format(dm1.numObjects)
+                pos1 = kk.find(prefix1)
+                pos2 = kk.find(prefix2)
+                if pos1 > -1:
+                    sub = kk[pos1 + len(prefix1):]
+                    metaData[sub] = ii
+                elif pos2 > -1:
+                    sub = kk[pos2 + len(prefix2):]
+                    metaData[sub] = ii
 
-        # Save most useful metaData
-        metaData = {}
-        metaData['file type'] = 'dm'
-        for kk, ii in dm1.allTags.items():
-            # Most useful starting tags
-            prefix1 = 'ImageList.{}.ImageTags.'.format(dm1.numObjects)
-            prefix2 = 'ImageList.{}.ImageData.'.format(dm1.numObjects)
-            pos1 = kk.find(prefix1)
-            pos2 = kk.find(prefix2)
-            if pos1 > -1:
-                sub = kk[pos1 + len(prefix1):]
-                metaData[sub] = ii
-            elif pos2 > -1:
-                sub = kk[pos2 + len(prefix2):]
-                metaData[sub] = ii
-
-            # Remove unneeded keys
-            for jj in list(metaData):
-                if jj.find('frame sequence') > -1:
-                    del metaData[jj]
-                elif jj.find('Private') > -1:
-                    del metaData[jj]
-                elif jj.find('Reference Images') > -1:
-                    del metaData[jj]
-                elif jj.find('Frame.Intensity') > -1:
-                    del metaData[jj]
-                elif jj.find('Area.Transform') > -1:
-                    del metaData[jj]
-                elif jj.find('Parameters.Objects') > -1:
-                    del metaData[jj]
-                elif jj.find('Device.Parameters') > -1:
-                    del metaData[jj]
-        del dm1
+                # Remove unneeded keys
+                for jj in list(metaData):
+                    if jj.find('frame sequence') > -1:
+                        del metaData[jj]
+                    elif jj.find('Private') > -1:
+                        del metaData[jj]
+                    elif jj.find('Reference Images') > -1:
+                        del metaData[jj]
+                    elif jj.find('Frame.Intensity') > -1:
+                        del metaData[jj]
+                    elif jj.find('Area.Transform') > -1:
+                        del metaData[jj]
+                    elif jj.find('Parameters.Objects') > -1:
+                        del metaData[jj]
+                    elif jj.find('Device.Parameters') > -1:
+                        del metaData[jj]
         return metaData
     
     @classmethod
