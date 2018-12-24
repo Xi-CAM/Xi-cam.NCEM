@@ -2,7 +2,6 @@ from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descri
     embedded_local_event_doc
 
 import os
-import fabio
 import uuid
 import re
 import functools
