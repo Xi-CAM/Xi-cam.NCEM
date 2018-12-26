@@ -25,6 +25,7 @@ from xicam.core import msg
 import numpy as np
 from ncempy.io import emd #EMD BErkeley datasets
 import h5py #for EMD Velox data sets
+import h5py_cache #for EMD velox files to improve reading performance
 
 class EMDPlugin(DataHandlerPlugin):
     name = 'EMDPlugin'
@@ -32,7 +33,7 @@ class EMDPlugin(DataHandlerPlugin):
     DEFAULT_EXTENTIONS = ['.emd']
 
     descriptor_keys = ['']
-
+    
     def __call__(self, path, index_t):
         veloxFlag = False
         im1 = None
@@ -43,11 +44,11 @@ class EMDPlugin(DataHandlerPlugin):
                 dataset0 = emd1.list_emds[0]['data'] #get the dataset in the first group found
                 
                 if dataset0.ndim == 2:
-                    im1 = dataset0['data']
+                    im1 = dataset0
                 elif dataset0.ndim == 3:
-                    im1 = dataset0['data'][index_t,:,:]
+                    im1 = dataset0[index_t,:,:]
                 elif dataset0.ndim == 4:
-                    im1 = dataset0['data'][0,index_t,:,:]
+                    im1 = dataset0[index_t,0,:,:]
                 else:
                     msg.logMessage('EMD: Only 1D-4D EMD Berkeley data sets are supported.')
         except IndexError:
@@ -58,12 +59,15 @@ class EMDPlugin(DataHandlerPlugin):
         #Open as Velox EMD file. Only supports 1 data set currently
         if veloxFlag:
             try:
-                with h5py.File(path,'r') as f1:
+                #with h5py.File(path,'r') as f1:
+                with h5py_cache.File(path,'r',chunk_cache_mem_size=5*1024**2) as f1:
                     f1Im = f1['Data/Image']
                     #Get all of the groups in the Image group
                     dsetGroups = list(f1['Data/Image'].values())
                     
-                    im1 = dsetGroups[0]['Data'][:,:,index_t] #Velox data is written incorrectly with Fortran ordering
+                    #Velox data is written incorrectly with Fortran ordering
+                    #Also, use an indexing trick [:,:,0:1] to make h5py indexing much faster
+                    im1 = dsetGroups[0]['Data'][:,:,index_t:index_t+1].squeeze()
             except KeyError:
                 msg.logMessage('EMD: No Velox Image group detected.')
                 raise
@@ -104,23 +108,24 @@ class EMDPlugin(DataHandlerPlugin):
         try:
             with emd.fileEMD(path) as emd1:
                 dataset0 = emd1.list_emds[0]['data'] #get the dataset in the first group found
-
                 out = dataset0.shape[0]
         except IndexError:
             veloxFlag = True
         except:
+            veloxFlag = True
             raise
         
         if veloxFlag:
             try:
-                with h5py.File(path,'r') as f1:
+                #with h5py.File(path,'r') as f1:
+                with h5py_cache.File(path,'r',chunk_cache_mem_size=5*1024**2) as f1:
                     f1Im = f1['Data/Image']
                     #Get all of the groups in the Image group
                     dsetGroups = list(f1['Data/Image'].values())
                     out = dsetGroups[0]['Data'].shape[-1] #Velox files are written incorrectly using Fortran ordering
             except:
+                out = None
                 raise
-                out = 0
         return out
 
     @classmethod
@@ -132,19 +137,25 @@ class EMDPlugin(DataHandlerPlugin):
         #Open as Berkelely EMD file
         try:
             with emd.fileEMD(path) as emd1:
-                dataset0 = emd1.list_emds[0]
-                
-                # Save most useful metaData
+                dataGroup = emd1.list_emds[0]
                 metaData['file type'] = 'emd berkeley'
                 
                 try:
                     metaData.update(emd1.file_hdl['/user'].attrs)
+                except:
+                    pass
                 try:
                     metaData.update(emd1.file_hdl['/microscope'].attrs)
+                except:
+                    pass
                 try:
                     metaData.update(emd1.file_hdl['/sample'].attrs)
+                except:
+                    pass
                 try:
                     metaData.update(emd1.file_hdl['/comments'].attrs)
+                except:
+                    pass
                 
                 if dataset0.ndim == 2:
                     dimY = emd1.list_emds[0]['dim1']
@@ -152,6 +163,9 @@ class EMDPlugin(DataHandlerPlugin):
                 elif dataset0.ndim == 3:
                     dimY = emd1.list_emds[0]['dim2']
                     dimX = emd1.list_emds[0]['dim3']
+                elif dataGroup['data'].ndim == 4:
+                    dimY = emd1.list_emds[0]['dim3']
+                    dimX = emd1.list_emds[0]['dim4']
 
                 #Store the X and Y pixel size, offset and unit
                 metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
@@ -160,18 +174,19 @@ class EMDPlugin(DataHandlerPlugin):
                 metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
                 metaData['PhysicalSizeYOrigin'] = dimY[0]
                 metaData['PhysicalSizeYUnit'] = dimY.attrs['units']
-            
+                
         except IndexError:
             msg.logMessage('EMD: No emd_dataset tags detected.')
             veloxFlag = True
         except:
+            veloxFlag = True
             raise
             
         #Open as Velox file
-        # This will eventually be moved to ncempy.io
         if veloxFlag:
             try:
-                with h5py.File(path,'r') as f1:
+                #with h5py.File(path,'r') as f1:
+                with h5py_cache.File(path,'r',chunk_cache_mem_size=5*1024**2) as f1:
                     f1Im = f1['Data/Image']
                     #Get all of the groups in the Image group
                     dsetGroups = list(f1['Data/Image'].values())
