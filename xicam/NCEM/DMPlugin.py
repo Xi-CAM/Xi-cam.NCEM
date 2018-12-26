@@ -1,16 +1,13 @@
 from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
     embedded_local_event_doc
 
-import os
-import uuid
-import re
+#import os
+#import uuid
+#import re
 import functools
-from pathlib import Path
+#from pathlib import Path
 from ncempy.io import dm
 from xicam.core import msg
-
-
-# TODO: add __enter__ and 'with' support to this plugin
 
 class DMPlugin(DataHandlerPlugin):
     name = 'DMPlugin'

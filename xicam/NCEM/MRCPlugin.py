@@ -1,11 +1,10 @@
 from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
     embedded_local_event_doc
 
-import os
-import uuid
-import re
+#import os
+#import uuid
 import functools
-from pathlib import Path
+#from pathlib import Path
 from xicam.core import msg
 from ncempy.io import mrc
 

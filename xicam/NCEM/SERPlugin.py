@@ -2,14 +2,12 @@ from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descri
     embedded_local_event_doc
 
 import os
-import uuid
-import re
+#import uuid
+#import re
 import functools
-from pathlib import Path
+#from pathlib import Path
 from ncempy.io import ser
 from xicam.core import msg
-
-
 
 class SERPlugin(DataHandlerPlugin):
     '''SER files that contain spectra are currently not supported.
