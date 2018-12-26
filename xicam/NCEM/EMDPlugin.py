@@ -128,6 +128,7 @@ class EMDPlugin(DataHandlerPlugin):
     def parseDataFile(cls, path):
         metaData = {}
         veloxFlag = False
+        
         #Open as Berkelely EMD file
         try:
             with emd.fileEMD(path) as emd1:
@@ -145,15 +146,21 @@ class EMDPlugin(DataHandlerPlugin):
                 try:
                     metaData.update(emd1.file_hdl['/comments'].attrs)
                 
-                #metaData.update()
                 if dataset0.ndim == 2:
                     dimY = emd1.list_emds[0]['dim1']
                     dimX = emd1.list_emds[0]['dim2']
-                    metaData['pixelSize'] = [dimY[1]-dimY[0],dimX[1]-dimX[0]]  # the pixel sizes as a list
                 elif dataset0.ndim == 3:
                     dimY = emd1.list_emds[0]['dim2']
                     dimX = emd1.list_emds[0]['dim3']
-                    metaData['pixelSize'] = [dimY[1]-dimY[0],dimX[1]-dimX[0]]  # the pixel sizes as a list
+
+                #Store the X and Y pixel size, offset and unit
+                metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
+                metaData['PhysicalSizeXOrigin'] = dimX[0]
+                metaData['PhysicalSizeXUnit'] = dimX.attrs['units']
+                metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
+                metaData['PhysicalSizeYOrigin'] = dimY[0]
+                metaData['PhysicalSizeYUnit'] = dimY.attrs['units']
+            
         except IndexError:
             msg.logMessage('EMD: No emd_dataset tags detected.')
             veloxFlag = True
@@ -161,25 +168,34 @@ class EMDPlugin(DataHandlerPlugin):
             raise
             
         #Open as Velox file
-        try:
-            with h5py.File(path,'r') as f1:
-                f1Im = f1['Data/Image']
-                #Get all of the groups in the Image group
-                dsetGroups = list(f1['Data/Image'].values())
-                
-                #Parse metadata
-                pixelSizeX = []
-                pixelSizeY = []
-                detectorName = []
-                image = dsetGroups[0]
-                mData = image['Metadata'][:,0] #get the metadata
-                validMetaDataIndex = np.where(mData > 0) #find valid metadata
-                mData = mData[validMetaDataIndex].tostring() #change to string
-                jj = json.loads(mData.decode('utf-8','ignore')) #load UTF-8 string as JSON and output dict
-                detectorName.append(jj['BinaryResult']['Detector'])
-                pixelSizeX.append(float(jj['BinaryResult']['PixelSize']['width'])*1e9) #change to nm
-                pixelSizeY.append(float(jj['BinaryResult']['PixelSize']['height'])*1e9) #change to nm
-                metaData['pixelSize'] = [pixelSizeX,pixelSizeY]
+        # This will eventually be moved to ncempy.io
+        if veloxFlag:
+            try:
+                with h5py.File(path,'r') as f1:
+                    f1Im = f1['Data/Image']
+                    #Get all of the groups in the Image group
+                    dsetGroups = list(f1['Data/Image'].values())
+                    
+                    #Convert JSON metadata to dict
+                    mData = dsetGroups[0]['Metadata'][:,0]
+                    validMetaDataIndex = np.where(mData > 0) #find valid metadata
+                    mData = mData[validMetaDataIndex].tostring() #change to string
+                    jj = json.loads(mData.decode('utf-8','ignore')) #load UTF-8 string as JSON and output dict
+                    metaData.update(jj)
+                    
+                    #Store the X and Y pixel size, offset and unit
+                    metaData['PhysicalSizeX'] = float(jj['BinaryResult']['PixelSize']['width'])
+                    metaData['PhysicalSizeXOrigin'] = float(jj['BinaryResult']['Offset']['x'])
+                    metaData['PhysicalSizeXUnit'] = jj['BinaryResult']['PixelPixelUnitX']
+                    metaData['PhysicalSizeY'] = float(jj['BinaryResult']['PixelSize']['height'])
+                    metaData['PhysicalSizeYOrigin'] = float(jj['BinaryResult']['Offset']['y'])
+                    metaData['PhysicalSizeYUnit'] = jj['BinaryResult']['PixelPixelUnitY']
+            except:
+                msg.logMessage('EMD: Velox meta data parsing failed.')
+                raise
+        
+        metaData['FileName'] = path
+        
         return metaData
 
     @classmethod
