@@ -58,13 +58,20 @@ class MRCPlugin(DataHandlerPlugin):
         with mrc.fileMRC(path) as mrc1:
             # Save most useful metaData
             metaData = {}
-            metaData['file type'] = 'mrc'
             if hasattr(mrc1, 'FEIinfo'):
                 # add in the special FEIinfo if it exists
                 metaData.update(mrc1.FEIinfo)
-
-            metaData['pixelSize'] = mrc1.voxelSize  # the pixel sizes
-
+            
+            #STore the X and Y pixel size, offset and unit
+            metaData['PhysicalSizeX'] = mrc1.voxelSize[2]*1e-10 #change Angstroms to meters
+            metaData['PhysicalSizeXOrigin'] = 0
+            metaData['PhysicalSizeXUnit'] = 'm'
+            metaData['PhysicalSizeY'] = mrc1.voxelSize[1]*1e-10 #change Angstroms to meters
+            metaData['PhysicalSizeYOrigin'] = 0
+            metaData['PhysicalSizeYUnit'] = 'm'
+            
+            metaData['FileName'] = path
+            
         return metaData
 
     @classmethod

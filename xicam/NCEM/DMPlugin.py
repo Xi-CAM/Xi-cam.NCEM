@@ -73,7 +73,8 @@ class DMPlugin(DataHandlerPlugin):
         with dm.fileDM(path) as dm1:
             # Save most useful metaData
             metaData = {}
-            metaData['file type'] = 'dm'
+            
+            #Only keep the most useful tags as meta data
             for kk, ii in dm1.allTags.items():
                 # Most useful starting tags
                 prefix1 = 'ImageList.{}.ImageTags.'.format(dm1.numObjects)
@@ -103,6 +104,17 @@ class DMPlugin(DataHandlerPlugin):
                         del metaData[jj]
                     elif jj.find('Device.Parameters') > -1:
                         del metaData[jj]
+        
+            #Store the X and Y pixel size, offset and unit
+            metaData['PhysicalSizeX'] = metaData['Calibrations.Dimension.1.Scale']
+            metaData['PhysicalSizeXOrigin'] = metaData['Calibrations.Dimension.1.Origin']
+            metaData['PhysicalSizeXUnit'] = metaData['Calibrations.Dimension.1.Units']
+            metaData['PhysicalSizeY'] = metaData['Calibrations.Dimension.2.Scale']
+            metaData['PhysicalSizeYOrigin'] = metaData['Calibrations.Dimension.2.Origin']
+            metaData['PhysicalSizeYUnit'] = metaData['Calibrations.Dimension.2.Units']
+            
+            metaData['FileName'] = path
+            
         return metaData
     
     @classmethod
