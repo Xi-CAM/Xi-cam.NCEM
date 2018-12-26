@@ -81,25 +81,17 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 try:
                     # header.startdoc, header.stopdoc, header.desciptordocs[ii], header.eventdocs[jj]
                     ftype = header.descriptors[0]['file type']
-                    if ftype == 'dm':
-                        # DM file
-                        scale0 = (header.descriptors[0]['Calibrations.Dimension.1.Scale'],
-                                  header.descriptors[0]['Calibrations.Dimension.2.Scale'])
-                        units0 = (header.descriptors[0]['Calibrations.Dimension.1.Units'],
-                                  header.descriptors[0]['Calibrations.Dimension.2.Units'])
-                    elif ftype == 'ser':
+                    if ftype == 'ser':
                         # SER file
                         scale0 = []
                         units0 = []
                         for cal in header.descriptors[0]['Calibration']:
                             scale0.append(cal['CalibrationDelta'])
                             units0.append('m')
-                    elif ftype == 'mrc':
-                        scale0 = header.descriptors[0]['pixelSize'][1:3] * 1e-10  # change to meters
-                        units0 = ['m', 'm']
                     else:
-                        scale0 = [1, 1]
-                        units0 = ['', '']
+                        #Unified meta data for pixel scale and units
+                        scale0 = (header.descriptors[0]['PhysicalSizeX'],header.descriptors[0]['PhysicalSizeY'])
+                        units0 = (header.descriptors[0]['PhysicalSizeXUnit'],header.descriptors[0]['PhysicalSizeYUnit'])
                 except:
                     scale0 = [1, 1]
                     units0 = ['', '']
