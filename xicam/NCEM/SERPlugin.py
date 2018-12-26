@@ -87,7 +87,17 @@ class SERPlugin(DataHandlerPlugin):
     @classmethod
     def parseDataFile(cls, path):
         metaData = cls.metadata(path)
-        metaData['file type'] = 'ser'  # TODO: remove this; internal representation should be independent of file type
+        
+        #Store the X and Y pixel size, offset and unit
+        metaData['PhysicalSizeX'] = metaData['Calibration'][0]['CalibrationDelta']
+        metaData['PhysicalSizeXOrigin'] = metaData['Calibration'][0]['CalibrationOffset']
+        metaData['PhysicalSizeXUnit'] = 'm' #always meters
+        metaData['PhysicalSizeY'] = metaData['Calibration'][1]['CalibrationDelta']
+        metaData['PhysicalSizeYOrigin'] = metaData['Calibration'][1]['CalibrationOffset']
+        metaData['PhysicalSizeYUnit'] = 'm' #always meters
+        
+        metaData['FileName'] = path
+        
         return metaData
 
     @classmethod
@@ -106,7 +116,13 @@ class SERPlugin(DataHandlerPlugin):
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
-        ser1 = ser.fileSER(path)
-        data, metaData = ser1.getDataset(0)
-        metaData.update(ser1.head)
+        with ser.fileSER(path) as ser1:
+            data, metaData = ser1.getDataset(0) #have to get 1 image and its meta data
+            emiName = path[:-6] + '.emi'
+            #Get extra meta data from the EMI file if it exists
+            if os.path.isfile(emiName):
+                emi = ser1.read_emi(emiName)
+                metaData.update(emi)
+        metaData.update(ser1.head) #some header data for the ser file
+        
         return metaData

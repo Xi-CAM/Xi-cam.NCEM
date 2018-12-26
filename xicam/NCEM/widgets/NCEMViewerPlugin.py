@@ -75,26 +75,15 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             if data.ndim > 1:
                 # kwargs['transform'] = QTransform(0, -1, 1, 0, 0, data.shape[-2])
                 #NOTE PAE: for setImage:
-                #   use scale = [xPixSize,yPixSize] to calibrate the pixelSize
-                #   use pg.PlotItem.setLabel('bottom', text='x axis title', units='m') 
                 #   use setImage(xVals=timeVals) to set the values on the slider for 3D data
                 try:
-                    # header.startdoc, header.stopdoc, header.desciptordocs[ii], header.eventdocs[jj]
-                    ftype = header.descriptors[0]['file type']
-                    if ftype == 'ser':
-                        # SER file
-                        scale0 = []
-                        units0 = []
-                        for cal in header.descriptors[0]['Calibration']:
-                            scale0.append(cal['CalibrationDelta'])
-                            units0.append('m')
-                    else:
-                        #Unified meta data for pixel scale and units
-                        scale0 = (header.descriptors[0]['PhysicalSizeX'],header.descriptors[0]['PhysicalSizeY'])
-                        units0 = (header.descriptors[0]['PhysicalSizeXUnit'],header.descriptors[0]['PhysicalSizeYUnit'])
+                    #Unified meta data for pixel scale and units
+                    scale0 = (header.descriptors[0]['PhysicalSizeX'],header.descriptors[0]['PhysicalSizeY'])
+                    units0 = (header.descriptors[0]['PhysicalSizeXUnit'],header.descriptors[0]['PhysicalSizeYUnit'])
                 except:
                     scale0 = [1, 1]
                     units0 = ['', '']
+                    msg.logMessage{'NCEMviewer: No pixel size or units detected'}
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])

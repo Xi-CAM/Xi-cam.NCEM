@@ -62,7 +62,7 @@ class MRCPlugin(DataHandlerPlugin):
                 # add in the special FEIinfo if it exists
                 metaData.update(mrc1.FEIinfo)
             
-            #STore the X and Y pixel size, offset and unit
+            #Store the X and Y pixel size, offset and unit
             metaData['PhysicalSizeX'] = mrc1.voxelSize[2]*1e-10 #change Angstroms to meters
             metaData['PhysicalSizeXOrigin'] = 0
             metaData['PhysicalSizeXUnit'] = 'm'
