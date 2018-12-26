@@ -185,7 +185,6 @@ class EMDPlugin(DataHandlerPlugin):
         #Open as Velox file
         if veloxFlag:
             try:
-                #with h5py.File(path,'r') as f1:
                 with h5py_cache.File(path,'r',chunk_cache_mem_size=5*1024**2) as f1:
                     f1Im = f1['Data/Image']
                     #Get all of the groups in the Image group
@@ -201,10 +200,10 @@ class EMDPlugin(DataHandlerPlugin):
                     #Store the X and Y pixel size, offset and unit
                     metaData['PhysicalSizeX'] = float(jj['BinaryResult']['PixelSize']['width'])
                     metaData['PhysicalSizeXOrigin'] = float(jj['BinaryResult']['Offset']['x'])
-                    metaData['PhysicalSizeXUnit'] = jj['BinaryResult']['PixelPixelUnitX']
+                    metaData['PhysicalSizeXUnit'] = jj['BinaryResult']['PixelUnitX']
                     metaData['PhysicalSizeY'] = float(jj['BinaryResult']['PixelSize']['height'])
                     metaData['PhysicalSizeYOrigin'] = float(jj['BinaryResult']['Offset']['y'])
-                    metaData['PhysicalSizeYUnit'] = jj['BinaryResult']['PixelPixelUnitY']
+                    metaData['PhysicalSizeYUnit'] = jj['BinaryResult']['PixelUnitY']
             except:
                 msg.logMessage('EMD: Velox meta data parsing failed.')
                 raise
