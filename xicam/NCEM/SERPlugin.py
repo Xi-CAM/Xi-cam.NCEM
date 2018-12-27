@@ -32,7 +32,6 @@ class SERPlugin(DataHandlerPlugin):
 
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
-        msg.logMessage('SER getEventDocs called')
         for path in paths:
 
             # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
