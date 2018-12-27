@@ -17,14 +17,14 @@ class DMPlugin(DataHandlerPlugin):
     descriptor_keys = ['']
     
     def __call__(self, index_z, index_t):
-        im1 = dm1.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
+        im1 = self.dm.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
         return im1['data']
 
     def __init__(self, path):
         super(DMPlugin, self).__init__()
         self._metadata = None
         self.path = path
-        self.ser = ser.fileDM(self.path)
+        self.dm = dm.fileDM(self.path)
         
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
@@ -134,3 +134,12 @@ class DMPlugin(DataHandlerPlugin):
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
+    
+    @staticmethod
+    @functools.lru_cache(maxsize=10, typed=False)
+    def metadata(path):
+        with dm.fileDM(path) as dm1:
+            pass
+        metaData = dm1.allTags
+        
+        return metaData
