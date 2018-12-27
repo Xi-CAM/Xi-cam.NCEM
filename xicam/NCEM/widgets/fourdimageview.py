@@ -6,7 +6,7 @@ from ncempy.io import dm
 from pathlib import Path
 
 class FourDImageView(QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
         
         #kwargs['dataSize'] = self.dataSize
         
