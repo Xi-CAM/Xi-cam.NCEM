@@ -18,11 +18,11 @@ Notes:
 from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
     embedded_local_event_doc
 
-import os
+#import os
 import json
 import functools
 from xicam.core import msg
-import numpy as np
+from numpy import where as npwhere
 from ncempy.io import emd #EMD BErkeley datasets
 import h5py #for EMD Velox data sets
 import h5py_cache #for EMD velox files to improve reading performance
@@ -192,7 +192,7 @@ class EMDPlugin(DataHandlerPlugin):
                     
                     #Convert JSON metadata to dict
                     mData = dsetGroups[0]['Metadata'][:,0]
-                    validMetaDataIndex = np.where(mData > 0) #find valid metadata
+                    validMetaDataIndex = npwhere(mData > 0) #find valid metadata
                     mData = mData[validMetaDataIndex].tostring() #change to string
                     jj = json.loads(mData.decode('utf-8','ignore')) #load UTF-8 string as JSON and output dict
                     metaData.update(jj)
