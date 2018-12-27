@@ -83,7 +83,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 except:
                     scale0 = [1, 1]
                     units0 = ['', '']
-                    msg.logMessage{'NCEMviewer: No pixel size or units detected'}
+                    #msg.logMessage{'NCEMviewer: No pixel size or units detected'}
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])

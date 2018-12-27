@@ -15,22 +15,30 @@ class DMPlugin(DataHandlerPlugin):
     DEFAULT_EXTENTIONS = ['.dm3', '.dm4']
 
     descriptor_keys = ['']
-
-    def __call__(self, path, index_z, index_t):
-        
-        with dm.fileDM(path) as dm1:
-            im1 = dm1.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
-
+    
+    def __call__(self, index_z, index_t):
+        im1 = dm1.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
         return im1['data']
+
+    def __init__(self, path):
+        super(DMPlugin, self).__init__()
+        self._metadata = None
+        self.path = path
+        self.ser = ser.fileDM(self.path)
         
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
+            # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
+            # cls().metadata is not part of spec, but implemented here as a special case
+            metadata = cls.metadata(path)
+            
             num_z = cls.num_z(path)
             num_t = cls.num_t(path)
             for index_z in range(num_z):
                 for index_t in range(num_t):
-                    yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path, index_z, index_t))
+                    yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path,),
+                                                   {'index_z': index_z, 'index_t': index_t})
 
     @staticmethod
     def num_z(path):
