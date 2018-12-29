@@ -24,7 +24,7 @@ class DMPlugin(DataHandlerPlugin):
         super(DMPlugin, self).__init__()
         self._metadata = None
         self.path = path
-        self.dm = dm.fileDM(self.path)
+        self.dm = dm.fileDM(self.path,on_memory = True)
         
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
@@ -48,8 +48,8 @@ class DMPlugin(DataHandlerPlugin):
         
         Only used for 4D data sets
         '''
-        with dm.fileDM(path) as dm1:
-            if dm1.numObjects > 1:
+        with dm.fileDM(path,on_memory = True) as dm1:
+            if dm1.thumbnail:
                 out = dm1.zSize2[1]
             else:
                 out = dm1.zSize2[0]
@@ -65,8 +65,8 @@ class DMPlugin(DataHandlerPlugin):
         image in the stack.
         
         '''
-        with dm.fileDM(path) as dm1:
-            if dm1.numObjects > 1:
+        with dm.fileDM(path,on_memory = True) as dm1:
+            if dm1.thumbnail > 1:
                 out = dm1.zSize[1]
             else:
                 out = dm1.zSize[0]
@@ -75,7 +75,7 @@ class DMPlugin(DataHandlerPlugin):
     @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(cls, path):
-        with dm.fileDM(path) as dm1:
+        with dm.fileDM(path,on_memory = True) as dm1:
             # Save most useful metaData
             metaData = {}
             
@@ -138,7 +138,7 @@ class DMPlugin(DataHandlerPlugin):
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
-        with dm.fileDM(path) as dm1:
+        with dm.fileDM(path,on_memory = True) as dm1:
             pass
         metaData = dm1.allTags
         
