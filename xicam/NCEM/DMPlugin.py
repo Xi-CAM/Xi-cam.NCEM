@@ -66,7 +66,7 @@ class DMPlugin(DataHandlerPlugin):
         
         '''
         with dm.fileDM(path,on_memory = True) as dm1:
-            if dm1.thumbnail > 1:
+            if dm1.thumbnail:
                 out = dm1.zSize[1]
             else:
                 out = dm1.zSize[0]
