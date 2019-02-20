@@ -18,15 +18,15 @@ class DMPlugin(DataHandlerPlugin):
     descriptor_keys = ['']
     
     def __call__(self, index_z, index_t):
-        im1 = self.dm.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
+        im1 = self.dm0.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
         return im1['data']
 
     def __init__(self, path):
         super(DMPlugin, self).__init__()
         self._metadata = None
         self.path = path
-        self.dm = dm.fileDM(self.path,on_memory = True)
-        
+        self.dm0 = dm.fileDM(self.path,on_memory = True)
+    
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
