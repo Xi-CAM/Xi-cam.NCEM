@@ -15,13 +15,13 @@ Notes:
 
 '''
 
-from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
-    embedded_local_event_doc
-
-#import os
 import json
 import functools
+
+from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
+    embedded_local_event_doc
 from xicam.core import msg
+
 from numpy import where as npwhere
 from ncempy.io import emd #EMD BErkeley datasets
 import h5py #for EMD Velox data sets
