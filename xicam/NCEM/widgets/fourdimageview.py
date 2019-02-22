@@ -1,3 +1,4 @@
+from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
 from qtpy.QtCore import QRect, QRectF
 import pyqtgraph as pg
@@ -48,32 +49,3 @@ class FourDImageView(QWidget):
                                          int(self.DProi.pos().x() + self.DProi.size().x()),
                                                 int(self.DProi.pos().y()):
                                                 int(self.DProi.pos().y() + self.DProi.size().y())], axis=(3, 2)) + 1))
-
-
-if __name__ == '__main__':
-    #Try to load the data
-    dPath = Path(r'C:\Users\Peter.000\Data\Te NP 4D-STEM')
-    fPath = Path('07_45x8 ss=5nm_spot11_CL=100 0p1s_alpha=4p63mrad_bin=4_300kV.dm4')
-    with dm.fileDM((dPath / fPath).as_posix()) as dm1:
-        try:
-            scanI = int(dm1.allTags['.ImageList.2.ImageTags.Series.nimagesx'])
-            scanJ = int(dm1.allTags['.ImageList.2.ImageTags.Series.nimagesy'])
-            im1 = dm1.getDataset(0)
-            numkI = im1['data'].shape[2]
-            numkJ = im1['data'].shape[1]
-
-            data = im1['data'].reshape([scanJ,scanI,numkJ,numkI])
-        except:
-            raise
-            print('Data is not a 4D DM3 or DM4 stack.')
-        
-    qapp = QApplication([])
-
-    fdview = FourDImageView()
-    fdview.show()
-    
-    #data = np.fromfunction(lambda x, y, kx, ky: (x - kx) ** 2 + (y - ky) ** 2, (20, 20, 512, 512))
-
-    fdview.setData(data)
-
-    qapp.exec_()
