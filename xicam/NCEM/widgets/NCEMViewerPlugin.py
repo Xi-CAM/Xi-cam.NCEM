@@ -4,10 +4,10 @@ from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
-import numpy as np
+#import numpy as np
 from xicam.core import msg
 from xicam.gui.widgets.dynimageview import DynImageView
-import pyqtgraph as pg
+#import pyqtgraph as pg
 
 # TODO: single-source with SAXSViewerPlugin
 
