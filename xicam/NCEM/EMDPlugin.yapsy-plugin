@@ -1,0 +1,9 @@
+[Core]
+Name = EMDPlugin
+Module = EMDPlugin.py
+
+[Documentation]
+Author = Peter Ercius
+Version = 0.1.0
+Website = https://github.com/lbl-camera/Xi-cam.NCEM
+Description = Extends Xicam to read EMD files
