@@ -38,21 +38,22 @@ class EMDPlugin(DataHandlerPlugin):
     
     def __call__(self, index_t):
         im1 = None
-        msg.logMessage('__call__ EMD index_t = {}'.format(index_t))
         if not self.veloxFlag:
             #Berkeley EMD
             dataset0 = self.emd1.list_emds[0]['data'] #get the dataset in the first group found
+            if dataset0.ndim == 2:
+                im1 = dataset0
+            elif dataset0.ndim == 3:
+                im1 = dataset0[index_t,:,:]
+            elif dataset0.ndim == 4:
+                im1 = dataset0[index_t,0,:,:]
         else:
             #Velox EMD
             dataset0 = self.emd1.list_data[0]['Data']
-        
-        if dataset0.ndim == 2:
-            im1 = dataset0
-        elif dataset0.ndim == 3:
-            im1 = dataset0[index_t,:,:]
-        elif dataset0.ndim == 4:
-            im1 = dataset0[index_t,0,:,:]
-        
+            if dataset0.ndim == 2:
+                im1 = dataset0
+            elif dataset0.ndim == 3:
+                im1 = dataset0[:,:,index_t]
         return im1
         
     def __init__(self, path):
@@ -132,30 +133,7 @@ class EMDPlugin(DataHandlerPlugin):
     @classmethod
     def parseDataFile(cls, path):
         metaData = cls.metadata(path)
-                
-        #Open as Berkelely EMD file
-        if not metaData['veloxFlag']:
-            
-            #Store the X and Y pixel size, offset and unit
-            metaData['PhysicalSizeX'] = metaData['dimX'][1] - metaData['dimX'][0]
-            metaData['PhysicalSizeXOrigin'] = metaData['dimX'][0]
-            metaData['PhysicalSizeXUnit'] = metaData['dimX'].attrs['units']
-            metaData['PhysicalSizeY'] = metaData['dimY'][1] - metaData['dimY'][0]
-            metaData['PhysicalSizeYOrigin'] = metaData['dimY'][0]
-            metaData['PhysicalSizeYUnit'] = metaData['dimY'].attrs['units']
-        else:
-            try:
-                #Store the X and Y pixel size, offset and unit
-                metaData['PhysicalSizeX'] = float(metaData['BinaryResult']['PixelSize']['width'])
-                metaData['PhysicalSizeXOrigin'] = float(metaData['BinaryResult']['Offset']['x'])
-                metaData['PhysicalSizeXUnit'] = metaData['BinaryResult']['PixelUnitX']
-                metaData['PhysicalSizeY'] = float(metaData['BinaryResult']['PixelSize']['height'])
-                metaData['PhysicalSizeYOrigin'] = float(metaData['BinaryResult']['Offset']['y'])
-                metaData['PhysicalSizeYUnit'] = metaData['BinaryResult']['PixelUnitY']
-            except:
-                msg.logMessage('EMD: Velox metadata parsing failed.')
-                raise
-        
+
         metaData['FileName'] = path
         
         return metaData
@@ -205,14 +183,22 @@ class EMDPlugin(DataHandlerPlugin):
                 pass
             
             if dataset0.ndim == 2:
-                metaData['dimY'] = dataGroup['dim1']
-                metaData['dimX'] = dataGroup['dim2']
+                dimY = dataGroup['dim1']
+                dimX = dataGroup['dim2']
             elif dataset0.ndim == 3:
-                metaData['dimY'] = dataGroup['dim2']
-                metaData['dimX'] = dataGroup['dim3']
+                dimY = dataGroup['dim2']
+                dimX = dataGroup['dim3']
             elif dataset0.ndim == 4:
-                metaData['dimY'] = dataGroup['dim3']
-                metaData['dimX'] = dataGroup['dim4']
+                dimY = dataGroup['dim3']
+                dimX = dataGroup['dim4']
+            
+            #Store the X and Y pixel size, offset and unit
+            metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
+            metaData['PhysicalSizeXOrigin'] = dimX[0]
+            metaData['PhysicalSizeXUnit'] = dimX.attrs['units']
+            metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
+            metaData['PhysicalSizeYOrigin'] = dimY[0]
+            metaData['PhysicalSizeYUnit'] = dimY.attrs['units']
             
             metaData['shape'] = dataset0.shape
             
@@ -231,8 +217,20 @@ class EMDPlugin(DataHandlerPlugin):
             mData = emd1.list_data[0]['Metadata'][:,0]
             validMetaDataIndex = npwhere(mData > 0) #find valid metadata
             mData = mData[validMetaDataIndex].tostring() #change to string
-            jj = json.loads(mData.decode('utf-8','ignore')) #load UTF-8 string as JSON and output dict
-            metaData.update(jj)
+            mDataS = json.loads(mData.decode('utf-8','ignore')) #load UTF-8 string as JSON and output dict
+            try:
+                #Store the X and Y pixel size, offset and unit
+                metaData['PhysicalSizeX'] = float(mDataS['BinaryResult']['PixelSize']['width'])
+                metaData['PhysicalSizeXOrigin'] = float(mDataS['BinaryResult']['Offset']['x'])
+                metaData['PhysicalSizeXUnit'] = mDataS['BinaryResult']['PixelUnitX']
+                metaData['PhysicalSizeY'] = float(mDataS['BinaryResult']['PixelSize']['height'])
+                metaData['PhysicalSizeYOrigin'] = float(mDataS['BinaryResult']['Offset']['y'])
+                metaData['PhysicalSizeYUnit'] = mDataS['BinaryResult']['PixelUnitY']
+            except:
+                msg.logMessage('EMD: Velox metadata parsing failed.')
+                raise
+            
+            metaData.update(mDataS)
             
             metaData['shape'] = dataset0.shape
         return metaData
