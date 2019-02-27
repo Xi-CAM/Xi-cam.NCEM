@@ -1,7 +1,10 @@
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.exporters import Exporter
 import numpy as np
+#from fabio import tifimage
+from tifffile import imsave
 
+from xicam.core import msg
 
 class TIFFExporter(Exporter):
     Name = "Tiff Exporter"
@@ -28,11 +31,11 @@ class TIFFExporter(Exporter):
             # TODO: mark non-data imageitems as not-exportable
             if getattr(item, 'exportable', True):  # only the first exportable item will be exported
                 image = item.image
+                msg.logMessage('pixel size = {}'.format(item.pixelSize()))
                 if self.params['Data Type']:
                     image = image.astype(self.params['Data Type'])
-                tif = tifimage.TifImage(image)
-                tif.header.update({'key': 'value'})  # put metadata here
-                tif.write(fileName)
+                #TODO: item.pixelSize() is not right. I need to find the scale and units of the axis
+                imsave(fileName,image,imagej=True,resolution=(item.pixelSize()[0],item.pixelSize()[1]),metadata={'unit':'nm'})
                 break
 
     def parameters(self):
