@@ -4,6 +4,7 @@ import pyqtgraph as pg
 import numpy as np
 from ncempy.io import dm
 from pathlib import Path
+from xicam.core.data import NonDBHeader
 
 class FourDImageView(QWidget):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
