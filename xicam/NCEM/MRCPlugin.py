@@ -14,8 +14,8 @@ class MRCPlugin(DataHandlerPlugin):
 
     DEFAULT_EXTENTIONS = ['.mrc', '.rec', '.ali','.st']
 
-    descriptor_keys = ['']
-    
+    descriptor_keys = ['object_keys']
+
     def __call__(self, index_z, index_t):
         im1 = self.mrc.getSlice(index_t)
         return im1
@@ -32,10 +32,10 @@ class MRCPlugin(DataHandlerPlugin):
             # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
             # cls().metadata is not part of spec, but implemented here as a special case
             metadata = cls.metadata(path)
-            
+
             num_t = cls.num_t(path)
             num_z = 1
-            
+
             for index_z in range(num_z):
                 for index_t in range(num_t):
                     yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path,),
@@ -69,7 +69,7 @@ class MRCPlugin(DataHandlerPlugin):
             if hasattr(mrc1, 'FEIinfo'):
                 # add in the special FEIinfo if it exists
                 metaData.update(mrc1.FEIinfo)
-            
+
             #Store the X and Y pixel size, offset and unit
             metaData['PhysicalSizeX'] = mrc1.voxelSize[2]*1e-10 #change Angstroms to meters
             metaData['PhysicalSizeXOrigin'] = 0
@@ -90,6 +90,7 @@ class MRCPlugin(DataHandlerPlugin):
     def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
         metadata = cls.parseTXTFile(paths[0])
         metadata.update(cls.parseDataFile(paths[0]))
+        metadata.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
 
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
@@ -99,8 +100,8 @@ class MRCPlugin(DataHandlerPlugin):
         with mrc.fileMRC(path) as mrc1:
             pass
         metaData = mrc1.dataOut #meata data information from the mrc header
-        
-        #TODO: The lines below would be better to go in parseTXTFile. 
+
+        # TODO: The lines below would be better to go in parseTXTFile.
         rawtltName = os.path.splitext(path)[0] + '.rawtlt'
         if os.path.isfile(rawtltName):
             with open(rawtltName,'r') as f1:

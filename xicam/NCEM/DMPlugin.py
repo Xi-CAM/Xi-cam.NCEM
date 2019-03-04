@@ -15,8 +15,9 @@ class DMPlugin(DataHandlerPlugin):
 
     DEFAULT_EXTENTIONS = ['.dm3', '.dm4']
 
-    descriptor_keys = ['']
-    
+    descriptor_keys = ['object_keys']
+
+
     def __call__(self, index_z, index_t):
         im1 = self.dm0.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
         return im1['data']
@@ -26,14 +27,14 @@ class DMPlugin(DataHandlerPlugin):
         self._metadata = None
         self.path = path
         self.dm0 = dm.fileDM(self.path,on_memory = True)
-    
+
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
             # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
             # cls().metadata is not part of spec, but implemented here as a special case
             metadata = cls.metadata(path)
-            
+
             num_z = cls.num_z(path)
             num_t = cls.num_t(path)
             for index_z in range(num_z):
@@ -131,16 +132,17 @@ class DMPlugin(DataHandlerPlugin):
     def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
         metadata = cls.parseTXTFile(paths[0])
         metadata.update(cls.parseDataFile(paths[0]))
+        metadata.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
 
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
-    
+
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
         with dm.fileDM(path,on_memory = True) as dm1:
             pass
         metaData = dm1.allTags
-        
+
         return metaData

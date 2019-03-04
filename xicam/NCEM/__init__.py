@@ -29,7 +29,7 @@ class NCEMPlugin(GUIPlugin):
         self.headermodel = QStandardItemModel()
 
         # Selection model
-        self.selectionmodel = QItemSelectionModel()
+        self.selectionmodel = QItemSelectionModel(self.headermodel)
 
         # Setup TabViews
         self.rawview = TabView(self.headermodel, self.selectionmodel,
