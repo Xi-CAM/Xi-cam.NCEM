@@ -33,7 +33,12 @@ class NCEMPlugin(GUIPlugin):
                                pluginmanager.getPluginByName('NCEMViewerPlugin',
                                                              'WidgetPlugin').plugin_object,
                                           'primary')
-
+        
+        self.fftview = TabView(self.headermodel, self.selectionmodel,
+                               pluginmanager.getPluginByName('FFTViewerPlugin',
+                                                             'WidgetPlugin').plugin_object,
+                                          'primary')
+        
         self.fourDview = TabView(self.headermodel, self.selectionmodel, FourDImageView, 'primary')
 
         self.metadataview = MetadataView(self.headermodel, self.selectionmodel)
@@ -42,7 +47,8 @@ class NCEMPlugin(GUIPlugin):
 
         self.stages = {
             'View': GUILayout(self.rawview, top=self.toolbar, right=self.metadataview),
-            '4D STEM': GUILayout(self.fourDview, )
+            '4D STEM': GUILayout(self.fourDview, ),
+            'FFT View': GUILayout(self.fftview, )
         }
         super(NCEMPlugin, self).__init__()
 
