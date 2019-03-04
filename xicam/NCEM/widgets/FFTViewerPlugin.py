@@ -17,7 +17,7 @@ from xicam.gui.widgets.dynimageview import DynImageView
 class FFTViewerPlugin(QWidgetPlugin, QWidgetPlugin):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
         
-        #Two Dynamic image views
+        #Two Dynamic image views (maybe only need 1 for the main data. The FFT can be an ImageView()
         self.Rimageview = DynImageView()
         self.Fimageview = DynImageView()
         # Keep Y-axis as is
@@ -25,6 +25,14 @@ class FFTViewerPlugin(QWidgetPlugin, QWidgetPlugin):
         self.Fimageview.view.invertY(True)
         self.Rimageview.imageItem.setOpts(axisOrder='col-major')
         self.Fimageview.imageItem.setOpts(axisOrder='col-major')
+        
+        # Add axes to the main data
+        self.axesItem = PlotItem()
+        # self.axesItem.setLabel('bottom', u'q ()')  # , units='s')
+        # self.axesItem.setLabel('left', u'q ()')
+        self.axesItem.axes['left']['item'].setZValue(10)
+        self.axesItem.axes['top']['item'].setZValue(10)
+        if 'view' not in kwargs: kwargs['view'] = self.axesItem
         
         #Add to a layout
         self.setLayout(QHBoxLayout())
@@ -78,8 +86,8 @@ class FFTViewerPlugin(QWidgetPlugin, QWidgetPlugin):
         ROI location and size
         
         '''
-        fft = np.abs(np.fft.fft2(self.data))
-        self.Fimageview.setImage(np.log(data[int(self.Rroi.pos().x()):int(self.Rroi.pos().x() + self.Rroi.size().x()),int(self.Rroi.pos().y()):int(self.Rroi.pos().y() + self.Rroi.size().y())] + 1))
+        fft = np.abs(np.fft.fft2(data[int(self.Rroi.pos().x()):int(self.Rroi.pos().x() + self.Rroi.size().x()),int(self.Rroi.pos().y()):int(self.Rroi.pos().y() + self.Rroi.size().y())] ))
+        self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft))+ 1))
     
     def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
         self.header = header
@@ -106,7 +114,11 @@ class FFTViewerPlugin(QWidgetPlugin, QWidgetPlugin):
                     units0 = ['', '']
                     #msg.logMessage{'NCEMviewer: No pixel size or units detected'}
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
+                # TODO: Need to add axesitem to the DynImageView
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])
+                
+                #Update the FFT of the image when new data is shown
+                self.updateFFT(data)
             #else:
             #    msg.logMessage('Cant load 1D data.')
