@@ -138,19 +138,6 @@ class EMDPlugin(DataHandlerPlugin):
 
         return metaData
 
-    @classmethod
-    def getStartDoc(cls, paths, start_uid):
-        return start_doc(start_uid=start_uid, metadata={'paths': paths})
-
-    @classmethod
-    def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
-        metadata = cls.parseTXTFile(paths[0])
-        metadata.update(cls.parseDataFile(paths[0]))
-
-        # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
-        # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
-        yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
-
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
@@ -234,7 +221,7 @@ class EMDPlugin(DataHandlerPlugin):
 
             metaData['shape'] = dataset0.shape
         return metaData
-
+    
     @classmethod
     def getStartDoc(cls, paths, start_uid):
         return start_doc(start_uid=start_uid, metadata={'paths': paths})
