@@ -4,10 +4,10 @@ from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
-import numpy as np
+#import numpy as np
 from xicam.core import msg
 from xicam.gui.widgets.dynimageview import DynImageView
-import pyqtgraph as pg
+#import pyqtgraph as pg
 
 # TODO: single-source with SAXSViewerPlugin
 
@@ -68,7 +68,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         try:
             data = header.meta_array(field)
         except IndexError:
-            msg.logMessage('Header object contained no frames with field ''{field}''.', msg.ERROR)
+            msg.logMessage('Header object contained no frames with field {field}.', msg.ERROR)
 
         if data:
             # data = np.squeeze(data) #test for 1D spectra
@@ -83,7 +83,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 except:
                     scale0 = [1, 1]
                     units0 = ['', '']
-                    msg.logMessage('NCEMviewer: No pixel size or units detected')
+                    #msg.logMessage{'NCEMviewer: No pixel size or units detected'}
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])

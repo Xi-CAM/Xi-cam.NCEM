@@ -3,12 +3,15 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 from xicam.plugins.WidgetPlugin import QWidgetPlugin
 
+from xicam.core import msg
+
 
 class NCEMToolbar(QToolBar):
     name = 'NCEMToolbar'
     sigDeviceChanged = Signal(str)
-
+    
     def __init__(self, headermodel: QStandardItemModel, selectionmodel: QItemSelectionModel):
+        
         super(NCEMToolbar, self).__init__()
 
         self.headermodel = headermodel

@@ -1,7 +1,7 @@
 from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
     embedded_local_event_doc
 
-#import os
+import os
 #import uuid
 import functools
 #from pathlib import Path
@@ -12,25 +12,34 @@ from ncempy.io import mrc
 class MRCPlugin(DataHandlerPlugin):
     name = 'MRCPlugin'
 
-    DEFAULT_EXTENTIONS = ['.mrc', '.rec', '.ali']
+    DEFAULT_EXTENTIONS = ['.mrc', '.rec', '.ali','.st']
 
     descriptor_keys = ['']
-
-    def __call__(self, path, index_t):
-
-        with mrc.fileMRC(path) as mrc1:
-            im1 = mrc1.getSlice(index_t)
-
+    
+    def __call__(self, index_z, index_t):
+        im1 = self.mrc.getSlice(index_t)
         return im1
+
+    def __init__(self, path):
+        super(MRCPlugin, self).__init__()
+        self._metadata = None
+        self.path = path
+        self.mrc = mrc.fileMRC(self.path)
 
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
+            # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
+            # cls().metadata is not part of spec, but implemented here as a special case
+            metadata = cls.metadata(path)
+            
             num_t = cls.num_t(path)
-            num_z = cls.num_z(path)
+            num_z = 1
+            
             for index_z in range(num_z):
                 for index_t in range(num_t):
-                    yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path, index_t))
+                    yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path,),
+                                                   {'index_z': index_z, 'index_t': index_t})
 
     @staticmethod
     def num_z(path):
@@ -85,3 +94,28 @@ class MRCPlugin(DataHandlerPlugin):
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
+
+    def metadata(path):
+        with mrc.fileMRC(path) as mrc1:
+            pass
+        metaData = mrc1.dataOut #meata data information from the mrc header
+        
+        #TODO: The lines below would be better to go in parseTXTFile. 
+        rawtltName = os.path.splitext(path)[0] + '.rawtlt'
+        if os.path.isfile(rawtltName):
+            with open(rawtltName,'r') as f1:
+                tilts = map(float,f1)
+            metaData['tilt angles'] = tilts
+        FEIparameters = os.path.splitext(path)[0] + '.txt'
+        if os.path.isfile(FEIparameters):
+            with open(FEIparameters,'r') as f2:
+                lines = f2.readlines()
+            pp1 = list([ii[18:].strip().split(':')] for ii in lines[3:-1])
+            pp2 = {}
+            for ll in pp1:
+                try:
+                    pp2[ll[0]] = float(ll[1])
+                except:
+                    pass #skip lines with no data
+            metaData.update(pp2)
+        return metaData

@@ -1,13 +1,14 @@
+import functools
+
 from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
     embedded_local_event_doc
-
-#import os
-#import uuid
-#import re
-import functools
-#from pathlib import Path
-from ncempy.io import dm
 from xicam.core import msg
+
+from ncempy.io import dm
+## For testing locally with ncempy development code
+#import sys
+#sys.path.append(r'C:\Users\Peter.000\Documents\scripting\openNCEMgh\ncempy\io')
+#import dm
 
 class DMPlugin(DataHandlerPlugin):
     name = 'DMPlugin'
@@ -15,22 +16,30 @@ class DMPlugin(DataHandlerPlugin):
     DEFAULT_EXTENTIONS = ['.dm3', '.dm4']
 
     descriptor_keys = ['']
-
-    def __call__(self, path, index_z, index_t):
-        
-        with dm.fileDM(path) as dm1:
-            im1 = dm1.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
-
+    
+    def __call__(self, index_z, index_t):
+        im1 = self.dm0.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
         return im1['data']
-        
+
+    def __init__(self, path):
+        super(DMPlugin, self).__init__()
+        self._metadata = None
+        self.path = path
+        self.dm0 = dm.fileDM(self.path,on_memory = True)
+    
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
+            # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
+            # cls().metadata is not part of spec, but implemented here as a special case
+            metadata = cls.metadata(path)
+            
             num_z = cls.num_z(path)
             num_t = cls.num_t(path)
             for index_z in range(num_z):
                 for index_t in range(num_t):
-                    yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path, index_z, index_t))
+                    yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path,),
+                                                   {'index_z': index_z, 'index_t': index_t})
 
     @staticmethod
     def num_z(path):
@@ -40,8 +49,8 @@ class DMPlugin(DataHandlerPlugin):
         
         Only used for 4D data sets
         '''
-        with dm.fileDM(path) as dm1:
-            if dm1.numObjects > 1:
+        with dm.fileDM(path,on_memory = True) as dm1:
+            if dm1.thumbnail:
                 out = dm1.zSize2[1]
             else:
                 out = dm1.zSize2[0]
@@ -57,8 +66,8 @@ class DMPlugin(DataHandlerPlugin):
         image in the stack.
         
         '''
-        with dm.fileDM(path) as dm1:
-            if dm1.numObjects > 1:
+        with dm.fileDM(path,on_memory = True) as dm1:
+            if dm1.thumbnail:
                 out = dm1.zSize[1]
             else:
                 out = dm1.zSize[0]
@@ -67,7 +76,7 @@ class DMPlugin(DataHandlerPlugin):
     @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(cls, path):
-        with dm.fileDM(path) as dm1:
+        with dm.fileDM(path,on_memory = True) as dm1:
             # Save most useful metaData
             metaData = {}
             
@@ -126,3 +135,12 @@ class DMPlugin(DataHandlerPlugin):
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
+    
+    @staticmethod
+    @functools.lru_cache(maxsize=10, typed=False)
+    def metadata(path):
+        with dm.fileDM(path,on_memory = True) as dm1:
+            pass
+        metaData = dm1.allTags
+        
+        return metaData

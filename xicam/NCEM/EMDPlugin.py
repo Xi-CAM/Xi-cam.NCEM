@@ -15,18 +15,19 @@ Notes:
 
 '''
 
-from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
-    embedded_local_event_doc
-
-# import os
 import json
 import functools
-from xicam.core import msg
-from numpy import where as npwhere
-from ncempy.io import emd  # EMD BErkeley datasets
-import h5py  # for EMD Velox data sets
-import h5py_cache  # for EMD velox files to improve reading performance
 
+from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
+    embedded_local_event_doc
+from xicam.core import msg
+
+from numpy import where as npwhere
+from ncempy.io import emd #EMD BErkeley datasets
+from ncempy.io import emdVelox #EMD Velox datasets
+
+import h5py #for EMD Velox data sets
+import h5py_cache #for EMD velox files to improve reading performance
 
 class EMDPlugin(DataHandlerPlugin):
     name = 'EMDPlugin'
@@ -34,41 +35,48 @@ class EMDPlugin(DataHandlerPlugin):
     DEFAULT_EXTENTIONS = ['.emd']
 
     descriptor_keys = ['']
-
-    def __call__(self, path, index_t):
-        veloxFlag = False
+    
+    def __call__(self, index_t):
         im1 = None
-
-        # First try to open as EMD Berkeley file
+        if not self.veloxFlag:
+            #Berkeley EMD
+            dataset0 = self.emd1.list_emds[0]['data'] #get the dataset in the first group found
+            if dataset0.ndim == 2:
+                im1 = dataset0
+            elif dataset0.ndim == 3:
+                im1 = dataset0[index_t,:,:]
+            elif dataset0.ndim == 4:
+                im1 = dataset0[index_t,0,:,:]
+        else:
+            #Velox EMD
+            dataset0 = self.emd1.list_data[0]['Data']
+            if dataset0.ndim == 2:
+                im1 = dataset0
+            elif dataset0.ndim == 3:
+                im1 = dataset0[:,:,index_t]
+        return im1
+        
+    def __init__(self, path):
+        super(EMDPlugin, self).__init__()
+        self._metadata = None
+        self.path = path
+        
+        self.veloxFlag = False
+        #First try to open as EMD Berkeley file
         try:
-            with emd.fileEMD(path, readonly=True) as emd1:
-                dataset0 = emd1.list_emds[0]['data']  # get the dataset in the first group found
-
-                if dataset0.ndim == 2:
-                    im1 = dataset0
-                elif dataset0.ndim == 3:
-                    im1 = dataset0[index_t, :, :]
-                elif dataset0.ndim == 4:
-                    im1 = dataset0[index_t, 0, :, :]
-                else:
-                    msg.logMessage('EMD: Only 1D-4D EMD Berkeley data sets are supported.')
+            self.emd1 = emd.fileEMD(path,readonly=True)
+            dataset0 = self.emd1.list_emds[0]['data'] #get the dataset in the first group found
         except IndexError:
-            im1 = None
             msg.logMessage('EMD: No emd_dataset tags detected.')
-            veloxFlag = True
-
-        # Open as Velox EMD file. Only supports 1 data set currently
-        if veloxFlag:
+            self.veloxFlag = True
+        except:
+            raise
+        
+        #Open as Velox EMD file. Only supports 1 data set currently
+        if self.veloxFlag:
             try:
-                # with h5py.File(path,'r') as f1:
-                with h5py_cache.File(path, 'r', chunk_cache_mem_size=5 * 1024 ** 2) as f1:
-                    f1Im = f1['Data/Image']
-                    # Get all of the groups in the Image group
-                    dsetGroups = list(f1['Data/Image'].values())
-
-                    # Velox data is written incorrectly with Fortran ordering
-                    # Also, use an indexing trick [:,:,0:1] to make h5py indexing much faster
-                    im1 = dsetGroups[0]['Data'][:, :, index_t:index_t + 1].squeeze()
+                self.emd1 = emdVelox.fileEMDVelox(path)
+                dataset0 = self.emd1.list_data[0]['Data']
             except KeyError:
                 msg.logMessage('EMD: No Velox Image group detected.')
                 raise
@@ -78,19 +86,27 @@ class EMDPlugin(DataHandlerPlugin):
             except:
                 raise
 
-        return im1
-
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
-            num_t = cls.num_t(path)
-            num_z = cls.num_z(path)
+            # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
+            # cls().metadata is not part of spec, but implemented here as a special 
+            # NOT NEEDED FOR EMDs.
+            metadata = cls.metadata(path)
+            
+            num_t = cls.num_t(metadata)
+            num_z = 1
+            
             for index_z in range(num_z):
                 for index_t in range(num_t):
-                    yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path, index_t))
+                    yield embedded_local_event_doc(descriptor_uid,
+                                                   'primary', 
+                                                   cls,
+                                                   (path,), 
+                                                   {'index_t': index_t})
 
     @staticmethod
-    def num_z(path):
+    def num_z(metadata):
         '''Limit to only 3D datasets.
         
         Returns 1 always
@@ -99,118 +115,27 @@ class EMDPlugin(DataHandlerPlugin):
         return 1
 
     @staticmethod
-    def num_t(path):
+    def num_t(metadata):
         '''The number of slices in the first dimension (C-ordering) for Berkeley data sets
         OR
         The number of slices in the last dimension (F-ordering) for Velox data sets
         
         '''
-        veloxFlag = False
-        try:
-            with emd.fileEMD(path) as emd1:
-                dataset0 = emd1.list_emds[0]['data']  # get the dataset in the first group found
-                out = dataset0.shape[0]
-        except IndexError:
-            veloxFlag = True
-        except:
-            veloxFlag = True
-            raise
+        if not metadata['veloxFlag']:
+            #EMD Berkeley
+            out = metadata['shape'][0] #Velox files are written incorrectly using Fortran ordering
+        else:
+            #EMD Velox
+            out = metadata['shape'][-1]
 
-        if veloxFlag:
-            try:
-                # with h5py.File(path,'r') as f1:
-                with h5py_cache.File(path, 'r', chunk_cache_mem_size=5 * 1024 ** 2) as f1:
-                    f1Im = f1['Data/Image']
-                    # Get all of the groups in the Image group
-                    dsetGroups = list(f1['Data/Image'].values())
-                    out = dsetGroups[0]['Data'].shape[-1]  # Velox files are written incorrectly using Fortran ordering
-            except:
-                out = None
-                raise
         return out
 
     @classmethod
-    @functools.lru_cache(maxsize=10, typed=False)
     def parseDataFile(cls, path):
-        metaData = {}
-        veloxFlag = False
-
-        # Open as Berkelely EMD file
-        try:
-            with emd.fileEMD(path) as emd1:
-                dataGroup = emd1.list_emds[0]
-                metaData['file type'] = 'emd berkeley'
-
-                try:
-                    metaData.update(emd1.file_hdl['/user'].attrs)
-                except:
-                    pass
-                try:
-                    metaData.update(emd1.file_hdl['/microscope'].attrs)
-                except:
-                    pass
-                try:
-                    metaData.update(emd1.file_hdl['/sample'].attrs)
-                except:
-                    pass
-                try:
-                    metaData.update(emd1.file_hdl['/comments'].attrs)
-                except:
-                    pass
-
-                if dataset0.ndim == 2:
-                    dimY = emd1.list_emds[0]['dim1']
-                    dimX = emd1.list_emds[0]['dim2']
-                elif dataset0.ndim == 3:
-                    dimY = emd1.list_emds[0]['dim2']
-                    dimX = emd1.list_emds[0]['dim3']
-                elif dataGroup['data'].ndim == 4:
-                    dimY = emd1.list_emds[0]['dim3']
-                    dimX = emd1.list_emds[0]['dim4']
-
-                # Store the X and Y pixel size, offset and unit
-                metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
-                metaData['PhysicalSizeXOrigin'] = dimX[0]
-                metaData['PhysicalSizeXUnit'] = dimX.attrs['units']
-                metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
-                metaData['PhysicalSizeYOrigin'] = dimY[0]
-                metaData['PhysicalSizeYUnit'] = dimY.attrs['units']
-
-        except IndexError:
-            msg.logMessage('EMD: No emd_dataset tags detected.')
-            veloxFlag = True
-        except:
-            veloxFlag = True
-            raise
-
-        # Open as Velox file
-        if veloxFlag:
-            try:
-                with h5py_cache.File(path, 'r', chunk_cache_mem_size=5 * 1024 ** 2) as f1:
-                    f1Im = f1['Data/Image']
-                    # Get all of the groups in the Image group
-                    dsetGroups = list(f1['Data/Image'].values())
-
-                    # Convert JSON metadata to dict
-                    mData = dsetGroups[0]['Metadata'][:, 0]
-                    validMetaDataIndex = npwhere(mData > 0)  # find valid metadata
-                    mData = mData[validMetaDataIndex].tostring()  # change to string
-                    jj = json.loads(mData.decode('utf-8', 'ignore'))  # load UTF-8 string as JSON and output dict
-                    metaData.update(jj)
-
-                    # Store the X and Y pixel size, offset and unit
-                    metaData['PhysicalSizeX'] = float(jj['BinaryResult']['PixelSize']['width'])
-                    metaData['PhysicalSizeXOrigin'] = float(jj['BinaryResult']['Offset']['x'])
-                    metaData['PhysicalSizeXUnit'] = jj['BinaryResult']['PixelUnitX']
-                    metaData['PhysicalSizeY'] = float(jj['BinaryResult']['PixelSize']['height'])
-                    metaData['PhysicalSizeYOrigin'] = float(jj['BinaryResult']['Offset']['y'])
-                    metaData['PhysicalSizeYUnit'] = jj['BinaryResult']['PixelUnitY']
-            except:
-                msg.logMessage('EMD: Velox meta data parsing failed.')
-                raise
+        metaData = cls.metadata(path)
 
         metaData['FileName'] = path
-
+        
         return metaData
 
     @classmethod
@@ -225,3 +150,87 @@ class EMDPlugin(DataHandlerPlugin):
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
+       
+    @staticmethod
+    @functools.lru_cache(maxsize=10, typed=False)
+    def metadata(path):
+       
+        metaData = {}
+        metaData['veloxFlag'] = False
+       
+        #First try to open as EMD Berkeley file
+        try:
+            #EMD Berkeley
+            emd1 = emd.fileEMD(path,readonly=True)
+            dataGroup = emd1.list_emds[0]
+            dataset0 = dataGroup['data'] #get the dataset in the first group found
+            
+            try:
+                metaData.update(emd1.file_hdl['/user'].attrs)
+            except:
+                pass
+            try:
+                metaData.update(emd1.file_hdl['/microscope'].attrs)
+            except:
+                pass
+            try:
+                metaData.update(emd1.file_hdl['/sample'].attrs)
+            except:
+                pass
+            try:
+                metaData.update(emd1.file_hdl['/comments'].attrs)
+            except:
+                pass
+            
+            if dataset0.ndim == 2:
+                dimY = dataGroup['dim1']
+                dimX = dataGroup['dim2']
+            elif dataset0.ndim == 3:
+                dimY = dataGroup['dim2']
+                dimX = dataGroup['dim3']
+            elif dataset0.ndim == 4:
+                dimY = dataGroup['dim3']
+                dimX = dataGroup['dim4']
+            
+            #Store the X and Y pixel size, offset and unit
+            metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
+            metaData['PhysicalSizeXOrigin'] = dimX[0]
+            metaData['PhysicalSizeXUnit'] = dimX.attrs['units']
+            metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
+            metaData['PhysicalSizeYOrigin'] = dimY[0]
+            metaData['PhysicalSizeYUnit'] = dimY.attrs['units']
+            
+            metaData['shape'] = dataset0.shape
+            
+        except IndexError:
+            metaData['veloxFlag'] = True
+        except:
+            raise
+        
+        #Open as Velox EMD file. Only supports 1 data set currently
+        if metaData['veloxFlag']:
+            emd1 = emdVelox.fileEMDVelox(path)
+            dataGroup = emd1.list_data[0]
+            dataset0 = dataGroup['Data']
+            
+            #Convert JSON metadata to dict
+            mData = emd1.list_data[0]['Metadata'][:,0]
+            validMetaDataIndex = npwhere(mData > 0) #find valid metadata
+            mData = mData[validMetaDataIndex].tostring() #change to string
+            mDataS = json.loads(mData.decode('utf-8','ignore')) #load UTF-8 string as JSON and output dict
+            try:
+                #Store the X and Y pixel size, offset and unit
+                metaData['PhysicalSizeX'] = float(mDataS['BinaryResult']['PixelSize']['width'])
+                metaData['PhysicalSizeXOrigin'] = float(mDataS['BinaryResult']['Offset']['x'])
+                metaData['PhysicalSizeXUnit'] = mDataS['BinaryResult']['PixelUnitX']
+                metaData['PhysicalSizeY'] = float(mDataS['BinaryResult']['PixelSize']['height'])
+                metaData['PhysicalSizeYOrigin'] = float(mDataS['BinaryResult']['Offset']['y'])
+                metaData['PhysicalSizeYUnit'] = mDataS['BinaryResult']['PixelUnitY']
+            except:
+                msg.logMessage('EMD: Velox metadata parsing failed.')
+                raise
+            
+            metaData.update(mDataS)
+            
+            metaData['shape'] = dataset0.shape
+        return metaData
