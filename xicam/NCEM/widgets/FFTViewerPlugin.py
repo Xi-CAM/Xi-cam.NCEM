@@ -1,124 +1,62 @@
 from xicam.plugins import QWidgetPlugin
-from pyqtgraph import ImageView, PlotItem
 from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
-from qtpy.QtCore import *
-from qtpy.QtGui import *
-from qtpy.QtCore import QRect, QRectF
-
 import numpy as np
 from xicam.core import msg
 from xicam.gui.widgets.dynimageview import DynImageView
-#import pyqtgraph as pg
+from .NCEMViewerPlugin import NCEMViewerPlugin
+import pyqtgraph as pg
 
-# TODO: single-source with SAXSViewerPlugin
 
-
-class FFTViewerPlugin(QWidgetPlugin, QWidgetPlugin):
+class FFTViewerPlugin(QWidgetPlugin):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
+        super(FFTViewerPlugin, self).__init__(*args, **kwargs)
         
         #Two Dynamic image views (maybe only need 1 for the main data. The FFT can be an ImageView()
-        self.Rimageview = DynImageView()
+        self.Rimageview = NCEMViewerPlugin()
         self.Fimageview = DynImageView()
         # Keep Y-axis as is
         self.Rimageview.view.invertY(True)
         self.Fimageview.view.invertY(True)
         self.Rimageview.imageItem.setOpts(axisOrder='col-major')
         self.Fimageview.imageItem.setOpts(axisOrder='col-major')
-        
-        # Add axes to the main data
-        self.axesItem = PlotItem()
-        # self.axesItem.setLabel('bottom', u'q ()')  # , units='s')
-        # self.axesItem.setLabel('left', u'q ()')
-        self.axesItem.axes['left']['item'].setZValue(10)
-        self.axesItem.axes['top']['item'].setZValue(10)
-        if 'view' not in kwargs: kwargs['view'] = self.axesItem
-        
+
         #Add to a layout
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.Rimageview)
         self.layout().addWidget(self.Fimageview)
         
         #Add ROI to real image
-        self.Rroi = pg.RectROI(pos=(0, 0), size=(10, 10), translateSnap=True, snapSize=1, scaleSnap=True)
-        self.Rroi.sigRegionChanged.connect(self.updateFFT)
-        Rview = self.Rimageview.view  # type: pg.ViewBox
+        scale = header.descriptors[0]['PhysicalSizeX'], header.descriptors[0]['PhysicalSizeY']
+        shape = header.descriptors[0]['ArrayShape']
+        self.Rroi = pg.RectROI(pos=(0, 0), size=(scale[0] * shape[0], scale[1] * shape[1]))
+        Rview = self.Rimageview.view.vb  # type: pg.ViewBox
         Rview.addItem(self.Rroi)
-        
-        super(FFTViewerPlugin, self).__init__(**kwargs)
-        
-        # Setup axes reset button 
-        self.resetAxesBtn = QPushButton('Reset Axes')
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.resetAxesBtn.sizePolicy().hasHeightForWidth())
-        self.resetAxesBtn.setSizePolicy(sizePolicy)
-        self.resetAxesBtn.setObjectName("resetAxes")
-        self.ui.gridLayout.addWidget(self.resetAxesBtn, 2, 1, 1, 1)
-        self.resetAxesBtn.clicked.connect(self.autoRange)
 
-        # Setup LUT reset button
-        self.resetLUTBtn = QPushButton('Reset LUT')
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.resetLUTBtn.sizePolicy().hasHeightForWidth())
-        # self.resetLUTBtn.setSizePolicy(sizePolicy)
-        # self.resetLUTBtn.setObjectName("resetLUTBtn")
-        self.ui.gridLayout.addWidget(self.resetLUTBtn, 3, 1, 1, 1)
-        self.resetLUTBtn.clicked.connect(self.autoLevels)
-
-        # Hide ROI button and rearrange
-        self.ui.roiBtn.setParent(None)
-        self.ui.gridLayout.addWidget(self.ui.menuBtn, 1, 1, 1, 1)
-        self.ui.gridLayout.addWidget(self.ui.graphicsView, 0, 0, 3, 1)
-
-        # Setup coordinates label
-        self.coordinatesLbl = QLabel('--COORDINATES WILL GO HERE--')
-        self.ui.gridLayout.addWidget(self.coordinatesLbl, 3, 0, 1, 1, alignment=Qt.AlignHCenter)
+        # Wireup signals
+        self.Rroi.sigRegionChanged.connect(self.updateFFT)
+        self.Rimageview.sigTimeChanged.connect(
+            self.updateFFT)  # TODO: If you'd like, use sigTimeChangeFinished here instead?
 
         # Set header
         if header: self.setHeader(header, field)
-    
-    def updateFFT(self, data):
+
+    def updateFFT(self):
         '''Update the FFT diffractogram based on the Real space
         ROI location and size
-        
+
         '''
-        fft = np.abs(np.fft.fft2(data[int(self.Rroi.pos().x()):int(self.Rroi.pos().x() + self.Rroi.size().x()),int(self.Rroi.pos().y()):int(self.Rroi.pos().y() + self.Rroi.size().y())] ))
-        self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft))+ 1))
+        # get the frame data back from Rimageview (applies timeline slicing)
+        try:
+            data = self.Rimageview.image[self.Rimageview.currentIndex]
+            dataslice = self.Rroi.getArrayRegion(data, self.Rimageview.imageItem)
+
+            fft = np.abs(np.fft.fft2(dataslice))
+            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1))
+            self.Rroi.setPen(pg.mkPen('w'))
+        except ValueError:
+            self.Rroi.setPen(pg.mkPen('r'))
     
     def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
-        self.header = header
-        self.field = field
-        # make lazy array from document
-        data = None
-        try:
-            data = header.meta_array(field)
-        except IndexError:
-            msg.logMessage('Header object contained no frames with field {field}.', msg.ERROR)
-
-        if data:
-            # data = np.squeeze(data) #test for 1D spectra
-            if data.ndim > 1:
-                # kwargs['transform'] = QTransform(0, -1, 1, 0, 0, data.shape[-2])
-                #NOTE PAE: for setImage:
-                #   use setImage(xVals=timeVals) to set the values on the slider for 3D data
-                try:
-                    #Unified meta data for pixel scale and units
-                    scale0 = (header.descriptors[0]['PhysicalSizeX'],header.descriptors[0]['PhysicalSizeY'])
-                    units0 = (header.descriptors[0]['PhysicalSizeXUnit'],header.descriptors[0]['PhysicalSizeYUnit'])
-                except:
-                    scale0 = [1, 1]
-                    units0 = ['', '']
-                    #msg.logMessage{'NCEMviewer: No pixel size or units detected'}
-                super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
-                # TODO: Need to add axesitem to the DynImageView
-                self.axesItem.setLabel('bottom', text='X', units=units0[0])
-                self.axesItem.setLabel('left', text='Y', units=units0[1])
-                
-                #Update the FFT of the image when new data is shown
-                self.updateFFT(data)
-            #else:
-            #    msg.logMessage('Cant load 1D data.')
+        self.Rimageview.setHeader(header, field, *args, **kwargs)
+        self.updateFFT()
