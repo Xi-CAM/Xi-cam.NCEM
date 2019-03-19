@@ -25,20 +25,20 @@ class TIFFExporter(Exporter):
         if fileName is None:
             self.fileSaveDialog(filter=["*.tif"])
             return
-        
-        #GraphicsSceve, PlotItem, ImageItem
-        #Get the ImageItem
+
+        # GraphicsSceve, PlotItem, ImageItem
+        # Get the ImageItem
         aa = self.item.getViewBox().allChildren()
         for ii in aa:
             msg.logMessage(f'children = {ii}')
         imItem = aa[1]
         msg.logMessage(f' image {imItem.image}')
-        msg.logMessage(f' scale {imItem.scale()}') #this is a method. Not the actual pixel size. It just returns 1.0
-        #Get the axes for the scale units
+        msg.logMessage(f' scale {imItem.scale()}')  # this is a method. Not the actual pixel size. It just returns 1.0
+        # Get the axes for the scale units
         bb = self.item.getAxis('bottom')
         msg.logMessage(f'export = {bb.labelUnits}')
         for item in self.item.addedItems:
-            
+
             # You could set a flag on non-data imageitems within the same viewbox to filter them out
             # TODO: mark non-data imageitems as not-exportable
             if getattr(item, 'exportable', True):  # only the first exportable item will be exported

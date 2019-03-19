@@ -68,7 +68,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         try:
             data = header.meta_array(field)
         except IndexError:
-            msg.logMessage('Header object contained no frames with field {field}.', msg.ERROR)
+            msg.logMessage(f'Header object contained no frames with field {field}.', msg.ERROR)
 
         if data:
             # data = np.squeeze(data) #test for 1D spectra
