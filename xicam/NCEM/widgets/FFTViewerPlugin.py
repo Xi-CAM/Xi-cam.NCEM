@@ -48,7 +48,7 @@ class FFTViewerPlugin(QWidgetPlugin):
         '''
         # get the frame data back from Rimageview (applies timeline slicing)
         try:
-            data = self.Rimageview.image[self.Rimageview.currentIndex]
+            data = self.Rimageview.imageItem.image
             dataslice = self.Rroi.getArrayRegion(data, self.Rimageview.imageItem)
 
             fft = np.abs(np.fft.fft2(dataslice))
