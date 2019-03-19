@@ -11,8 +11,8 @@ import pyqtgraph as pg
 class FFTViewerPlugin(QWidgetPlugin):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
         super(FFTViewerPlugin, self).__init__(*args, **kwargs)
-        
-        #Two Dynamic image views (maybe only need 1 for the main data. The FFT can be an ImageView()
+
+        # Two Dynamic image views (maybe only need 1 for the main data. The FFT can be an ImageView()
         self.Rimageview = NCEMViewerPlugin()
         self.Fimageview = DynImageView()
         # Keep Y-axis as is
@@ -21,12 +21,12 @@ class FFTViewerPlugin(QWidgetPlugin):
         self.Rimageview.imageItem.setOpts(axisOrder='col-major')
         self.Fimageview.imageItem.setOpts(axisOrder='col-major')
 
-        #Add to a layout
+        # Add to a layout
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.Rimageview)
         self.layout().addWidget(self.Fimageview)
-        
-        #Add ROI to real image
+
+        # Add ROI to real image
         scale = header.descriptors[0]['PhysicalSizeX'], header.descriptors[0]['PhysicalSizeY']
         shape = header.descriptors[0]['ArrayShape']
         self.Rroi = pg.RectROI(pos=(0, 0), size=(scale[0] * shape[0], scale[1] * shape[1]))
@@ -56,7 +56,7 @@ class FFTViewerPlugin(QWidgetPlugin):
             self.Rroi.setPen(pg.mkPen('w'))
         except ValueError:
             self.Rroi.setPen(pg.mkPen('r'))
-    
+
     def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
         self.Rimageview.setHeader(header, field, *args, **kwargs)
         self.updateFFT()
