@@ -16,6 +16,9 @@ from xicam.gui.widgets.metadataview import MetadataView
 
 from xicam.gui.widgets.tabview import TabView
 
+from .patches import pyqtgraph_export
+from .patches import pyqtgraph_tiffexporter
+
 
 class NCEMPlugin(GUIPlugin):
     name = 'NCEM'
@@ -26,19 +29,19 @@ class NCEMPlugin(GUIPlugin):
         self.headermodel = QStandardItemModel()
 
         # Selection model
-        self.selectionmodel = QItemSelectionModel()
+        self.selectionmodel = QItemSelectionModel(self.headermodel)
 
         # Setup TabViews
         self.rawview = TabView(self.headermodel, self.selectionmodel,
                                pluginmanager.getPluginByName('NCEMViewerPlugin',
                                                              'WidgetPlugin').plugin_object,
                                           'primary')
-        
+
         self.fftview = TabView(self.headermodel, self.selectionmodel,
                                pluginmanager.getPluginByName('FFTViewerPlugin',
                                                              'WidgetPlugin').plugin_object,
                                           'primary')
-        
+
         self.fourDview = TabView(self.headermodel, self.selectionmodel, FourDImageView, 'primary')
 
         self.metadataview = MetadataView(self.headermodel, self.selectionmodel)

@@ -26,7 +26,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         super(NCEMViewerPlugin, self).__init__(**kwargs)
         self.axesItem.invertY(False)
 
-        # Setup axes reset button 
+        # Setup axes reset button
         self.resetAxesBtn = QPushButton('Reset Axes')
         sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)

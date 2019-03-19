@@ -34,8 +34,8 @@ class EMDPlugin(DataHandlerPlugin):
 
     DEFAULT_EXTENTIONS = ['.emd']
 
-    descriptor_keys = ['']
-    
+    descriptor_keys = ['object_keys']
+
     def __call__(self, index_t):
         im1 = None
         if not self.veloxFlag:
@@ -55,12 +55,12 @@ class EMDPlugin(DataHandlerPlugin):
             elif dataset0.ndim == 3:
                 im1 = dataset0[:,:,index_t]
         return im1
-        
+
     def __init__(self, path):
         super(EMDPlugin, self).__init__()
         self._metadata = None
         self.path = path
-        
+
         self.veloxFlag = False
         #First try to open as EMD Berkeley file
         try:
@@ -71,7 +71,7 @@ class EMDPlugin(DataHandlerPlugin):
             self.veloxFlag = True
         except:
             raise
-        
+
         #Open as Velox EMD file. Only supports 1 data set currently
         if self.veloxFlag:
             try:
@@ -90,19 +90,19 @@ class EMDPlugin(DataHandlerPlugin):
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
             # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
-            # cls().metadata is not part of spec, but implemented here as a special 
+            # cls().metadata is not part of spec, but implemented here as a special
             # NOT NEEDED FOR EMDs.
             metadata = cls.metadata(path)
-            
+
             num_t = cls.num_t(metadata)
             num_z = 1
-            
+
             for index_z in range(num_z):
                 for index_t in range(num_t):
                     yield embedded_local_event_doc(descriptor_uid,
-                                                   'primary', 
+                                                   'primary',
                                                    cls,
-                                                   (path,), 
+                                                   (path,),
                                                    {'index_t': index_t})
 
     @staticmethod
@@ -135,7 +135,7 @@ class EMDPlugin(DataHandlerPlugin):
         metaData = cls.metadata(path)
 
         metaData['FileName'] = path
-        
+
         return metaData
 
     @classmethod
@@ -150,21 +150,21 @@ class EMDPlugin(DataHandlerPlugin):
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
-       
+
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
-       
+
         metaData = {}
         metaData['veloxFlag'] = False
-       
+
         #First try to open as EMD Berkeley file
         try:
             #EMD Berkeley
             emd1 = emd.fileEMD(path,readonly=True)
             dataGroup = emd1.list_emds[0]
             dataset0 = dataGroup['data'] #get the dataset in the first group found
-            
+
             try:
                 metaData.update(emd1.file_hdl['/user'].attrs)
             except:
@@ -181,7 +181,7 @@ class EMDPlugin(DataHandlerPlugin):
                 metaData.update(emd1.file_hdl['/comments'].attrs)
             except:
                 pass
-            
+
             if dataset0.ndim == 2:
                 dimY = dataGroup['dim1']
                 dimX = dataGroup['dim2']
@@ -191,7 +191,7 @@ class EMDPlugin(DataHandlerPlugin):
             elif dataset0.ndim == 4:
                 dimY = dataGroup['dim3']
                 dimX = dataGroup['dim4']
-            
+
             #Store the X and Y pixel size, offset and unit
             metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
             metaData['PhysicalSizeXOrigin'] = dimX[0]
@@ -199,20 +199,20 @@ class EMDPlugin(DataHandlerPlugin):
             metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
             metaData['PhysicalSizeYOrigin'] = dimY[0]
             metaData['PhysicalSizeYUnit'] = dimY.attrs['units']
-            
+
             metaData['shape'] = dataset0.shape
-            
+
         except IndexError:
             metaData['veloxFlag'] = True
         except:
             raise
-        
+
         #Open as Velox EMD file. Only supports 1 data set currently
         if metaData['veloxFlag']:
             emd1 = emdVelox.fileEMDVelox(path)
             dataGroup = emd1.list_data[0]
             dataset0 = dataGroup['Data']
-            
+
             #Convert JSON metadata to dict
             mData = emd1.list_data[0]['Metadata'][:,0]
             validMetaDataIndex = npwhere(mData > 0) #find valid metadata
@@ -229,8 +229,22 @@ class EMDPlugin(DataHandlerPlugin):
             except:
                 msg.logMessage('EMD: Velox metadata parsing failed.')
                 raise
-            
+
             metaData.update(mDataS)
-            
+
             metaData['shape'] = dataset0.shape
         return metaData
+
+    @classmethod
+    def getStartDoc(cls, paths, start_uid):
+        return start_doc(start_uid=start_uid, metadata={'paths': paths})
+
+    @classmethod
+    def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
+        metadata = cls.parseTXTFile(paths[0])
+        metadata.update(cls.parseDataFile(paths[0]))
+        metadata.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
+
+        # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
+        # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
+        yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)

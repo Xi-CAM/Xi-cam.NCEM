@@ -18,7 +18,7 @@ class SERPlugin(DataHandlerPlugin):
 
     DEFAULT_EXTENTIONS = ['.ser']
 
-    descriptor_keys = ['']
+    descriptor_keys = ['object_keys']
 
     def __call__(self, index_z, index_t):
         im1 = self.ser.getDataset(index_t)[0]
@@ -84,7 +84,7 @@ class SERPlugin(DataHandlerPlugin):
     @classmethod
     def parseDataFile(cls, path):
         metaData = cls.metadata(path)
-        
+
         #Store the X and Y pixel size, offset and unit
         metaData['PhysicalSizeX'] = metaData['Calibration'][0]['CalibrationDelta']
         metaData['PhysicalSizeXOrigin'] = metaData['Calibration'][0]['CalibrationOffset']
@@ -105,6 +105,7 @@ class SERPlugin(DataHandlerPlugin):
     def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
         metadata = cls.parseTXTFile(paths[0])
         metadata.update(cls.parseDataFile(paths[0]))
+        metadata.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
 
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(self, 'descriptor_keys', [])])
