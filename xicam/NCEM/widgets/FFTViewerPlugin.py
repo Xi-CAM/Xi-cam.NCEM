@@ -28,7 +28,7 @@ class FFTViewerPlugin(QWidgetPlugin):
 
         # Add ROI to real image
         scale = header.descriptors[0]['PhysicalSizeX'], header.descriptors[0]['PhysicalSizeY']
-        shape = header.descriptors[0]['ArrayShape']
+        shape = (50, 50) #header.descriptors[0]['ArrayShape']
         self.Rroi = pg.RectROI(pos=(0, 0), size=(scale[0] * shape[0], scale[1] * shape[1]))
         Rview = self.Rimageview.view.vb  # type: pg.ViewBox
         Rview.addItem(self.Rroi)
@@ -49,9 +49,12 @@ class FFTViewerPlugin(QWidgetPlugin):
         # get the frame data back from Rimageview (applies timeline slicing)
         try:
             data = self.Rimageview.imageItem.image
-            dataslice = self.Rroi.getArrayRegion(data, self.Rimageview.imageItem)
-
-            fft = np.abs(np.fft.fft2(dataslice))
+            
+            #dataslice = self.Rroi.getArrayRegion(data, self.Rimageview.imageItem,order=0) #this is pretty slow. Maybe there is a faster way?
+            sliceCoords = self.Rroi.getArraySlice(data, self.Rimageview.imageItem,returnSlice = False) #this is pretty slow. Maybe there is a faster way?
+            dataslice = data[int(sliceCoords[0][0][0]):int(sliceCoords[0][0][1]), int(sliceCoords[0][1][0]):int(sliceCoords[0][1][1])]
+            
+            fft = np.fft.fft2(dataslice)
             self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1))
             self.Rroi.setPen(pg.mkPen('w'))
         except ValueError:
@@ -60,3 +63,4 @@ class FFTViewerPlugin(QWidgetPlugin):
     def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
         self.Rimageview.setHeader(header, field, *args, **kwargs)
         self.updateFFT()
+        
