@@ -18,6 +18,9 @@ class MRCPlugin(DataHandlerPlugin):
 
     def __call__(self, index_z, index_t):
         im1 = self.mrc.getSlice(index_t)
+        #for ii in range(1,5):
+        #    im = self.mrc.getSlice(index_t+ii)
+        #    im1 += im
         return im1
 
     def __init__(self, path):
@@ -28,6 +31,7 @@ class MRCPlugin(DataHandlerPlugin):
 
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
+        
         for path in paths:
             # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
             # cls().metadata is not part of spec, but implemented here as a special case
@@ -96,7 +100,10 @@ class MRCPlugin(DataHandlerPlugin):
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
         yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
 
+    @staticmethod
+    @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
+
         with mrc.fileMRC(path) as mrc1:
             pass
         metaData = mrc1.dataOut #meata data information from the mrc header
@@ -119,4 +126,6 @@ class MRCPlugin(DataHandlerPlugin):
                 except:
                     pass #skip lines with no data
             metaData.update(pp2)
+        
+        
         return metaData
