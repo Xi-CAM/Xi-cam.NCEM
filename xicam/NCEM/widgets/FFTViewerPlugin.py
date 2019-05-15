@@ -38,6 +38,9 @@ class FFTViewerPlugin(QWidgetPlugin):
         self.Rimageview.sigTimeChanged.connect(
             self.updateFFT)  # TODO: If you'd like, use sigTimeChangeFinished here instead?
 
+        # Init vars
+        self.header = None
+
         # Set header
         if header: self.setHeader(header, field)
 
@@ -50,17 +53,25 @@ class FFTViewerPlugin(QWidgetPlugin):
         try:
             data = self.Rimageview.imageItem.image
             
-            #dataslice = self.Rroi.getArrayRegion(data, self.Rimageview.imageItem,order=0) #this is pretty slow. Maybe there is a faster way?
-            sliceCoords = self.Rroi.getArraySlice(data, self.Rimageview.imageItem,returnSlice = False) #this is pretty slow. Maybe there is a faster way?
-            dataslice = data[int(sliceCoords[0][0][0]):int(sliceCoords[0][0][1]), int(sliceCoords[0][1][0]):int(sliceCoords[0][1][1])]
+            # Get the ROI coodinates and pixel size
+            scale = self.header.descriptors[0]['PhysicalSizeX'], self.header.descriptors[0]['PhysicalSizeY']
+            x,y = self.Rroi.pos()
+            w,h = self.Rroi.size()
             
-            fft = np.fft.fft2(dataslice)
+            # Extract the dat in the ROI
+            #dataslice = self.Rroi.getArrayRegion(data, self.Rimageview.imageItem, order=0, mode='nearest') #this is pretty slow. Maybe there is a faster way?
+            #sliceCoords = self.Rroi.getArraySlice(data, self.Rimageview.imageItem,returnSlice = False) #this is pretty slow. Maybe there is a faster way?
+            #dataslice = data[int(sliceCoords[0][0][0]):int(sliceCoords[0][0][1]), int(sliceCoords[0][1][0]):int(sliceCoords[0][1][1])] # use with sliceCoords
+            dataSlice = data[int(y/scale[1]):int((y+h)/scale[1]),int(x/scale[0]):int((x+w)/scale[0])]
+            
+            fft = np.fft.fft2(dataSlice)
             self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1))
             self.Rroi.setPen(pg.mkPen('w'))
         except ValueError:
             self.Rroi.setPen(pg.mkPen('r'))
 
     def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
+        self.header = header
         self.Rimageview.setHeader(header, field, *args, **kwargs)
         self.updateFFT()
         
