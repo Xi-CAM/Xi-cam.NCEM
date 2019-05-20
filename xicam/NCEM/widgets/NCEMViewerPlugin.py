@@ -1,3 +1,5 @@
+import itertools
+
 from xicam.plugins import QWidgetPlugin
 from pyqtgraph import ImageView, PlotItem
 from xicam.core.data import NonDBHeader
@@ -56,7 +58,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         # Setup coordinates label
         self.coordinatesLbl = QLabel('--COORDINATES WILL GO HERE--')
         self.ui.gridLayout.addWidget(self.coordinatesLbl, 3, 0, 1, 1, alignment=Qt.AlignHCenter)
-
+        
         # Set header
         if header: self.setHeader(header, field)
 
@@ -69,7 +71,10 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             data = header.meta_array(field)
         except IndexError:
             msg.logMessage(f'Header object contained no frames with field {field}.', msg.ERROR)
-
+        
+        for ii in header:
+            print('header types = '.format(type(ii)))
+        
         if data:
             # data = np.squeeze(data) #test for 1D spectra
             if data.ndim > 1:
@@ -77,13 +82,16 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 #NOTE PAE: for setImage:
                 #   use setImage(xVals=timeVals) to set the values on the slider for 3D data
                 try:
-                    #Unified meta data for pixel scale and units
-                    scale0 = (header.descriptors[0]['PhysicalSizeX'],header.descriptors[0]['PhysicalSizeY'])
-                    units0 = (header.descriptors[0]['PhysicalSizeXUnit'],header.descriptors[0]['PhysicalSizeYUnit'])
+                    # Retrieve the metadata for pixel scale and units
+                    descriptorsTee = itertools.tee(header.descriptors, 1)[0] #tee the descriptors generator once
+                    _ = next(descriptorsTee) #start document
+                    headerTitle, md = next(descriptorsTee) #descriptor document with metadata
+                    scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
+                    units0 = (md['PhysicalSizeXUnit'], md['PhysicalSizeYUnit'])
                 except:
-                    scale0 = [1, 1]
-                    units0 = ['', '']
-                    #msg.logMessage{'NCEMviewer: No pixel size or units detected'}
+                    scale0 = (1, 1)
+                    units0 = ('', '')
+                    msg.logMessage('NCEMviewer: No pixel size or units detected')
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])
