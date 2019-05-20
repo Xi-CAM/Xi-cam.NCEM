@@ -26,7 +26,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         if 'view' not in kwargs: kwargs['view'] = self.axesItem
 
         super(NCEMViewerPlugin, self).__init__(**kwargs)
-        self.axesItem.invertY(False)
+        self.axesItem.invertY(True)
 
         # Setup axes reset button
         self.resetAxesBtn = QPushButton('Reset Axes')
