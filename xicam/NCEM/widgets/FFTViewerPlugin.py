@@ -21,8 +21,8 @@ class FFTViewerPlugin(QWidgetPlugin):
         # Keep Y-axis as is
         self.Rimageview.view.invertY(True)
         self.Fimageview.view.invertY(True)
-        self.Rimageview.imageItem.setOpts(axisOrder='col-major')
-        self.Fimageview.imageItem.setOpts(axisOrder='col-major')
+        #self.Rimageview.imageItem.setOpts(axisOrder='col-major')
+        #self.Fimageview.imageItem.setOpts(axisOrder='col-major')
 
         # Add to a layout
         self.setLayout(QHBoxLayout())
@@ -42,7 +42,7 @@ class FFTViewerPlugin(QWidgetPlugin):
             units0 = ('','')
             msg.logMessage('No pixel size')
         shape = (50, 50) #header.descriptors[0]['ArrayShape']
-        self.Rroi = pg.RectROI(pos=(0, 0), size=(scale0[0] * shape[0], scale0[1] * shape[1]))
+        self.Rroi = pg.RectROI(pos=(0, 0), size = (scale0[0] * shape[0], scale0[1] * shape[1]))
         Rview = self.Rimageview.view.vb  # type: pg.ViewBox
         Rview.addItem(self.Rroi)
 
@@ -81,7 +81,7 @@ class FFTViewerPlugin(QWidgetPlugin):
             # Extract the data in the ROI
             x,y = self.Rroi.pos()
             w,h = self.Rroi.size()
-            dataSlice = data[int(y/scale0[1]):int((y+h)/scale0[1]),int(x/scale0[0]):int((x+w)/scale0[0])]
+            dataSlice = data[int(y/scale0[0]):int((y+h)/scale0[0]),int(x/scale0[1]):int((x+w)/scale0[1])]
             
             fft = np.fft.fft2(dataSlice)
             self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1))
