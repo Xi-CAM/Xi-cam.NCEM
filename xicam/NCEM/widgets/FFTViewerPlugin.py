@@ -81,7 +81,7 @@ class FFTViewerPlugin(QWidgetPlugin):
             # Extract the data in the ROI
             x,y = self.Rroi.pos()
             w,h = self.Rroi.size()
-            dataSlice = data[int(y/scale0[0]):int((y+h)/scale0[0]),int(x/scale0[1]):int((x+w)/scale0[1])]
+            dataSlice = data[int(y/scale0[1]):int((y+h)/scale0[1]),int(x/scale0[0]):int((x+w)/scale0[0])]
             
             fft = np.fft.fft2(dataSlice)
             self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1))
