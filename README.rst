@@ -62,19 +62,27 @@ Update all xicam packages.
 .. code-block:: bash
 #!/bin/bash
 echo xi-cam
+
 cd ./xi-cam
+
 git pull
 
 echo xi-cam.plugins
+
 cd ../xi-cam.plugins
+
 git pull
 
 echo xi-cam.gui
+
 cd ../xi-cam.gui
+
 git pull
 
 echo xi-cam.core
+
 cd ../xi-cam.core
+
 git pull
 
 echo xicam.NCEM
