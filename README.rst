@@ -30,6 +30,7 @@ Installation
 Installation is only supported using source code available at the Camera Github Repositories
 
 Here are a set of steps to install this program using git, conda, and pip on Windows:
+
 .. code-block:: bash
     git clone git@github.com:lbl-camera/Xi-cam.gui.git
     
@@ -42,6 +43,7 @@ Here are a set of steps to install this program using git, conda, and pip on Win
     git clone git@github.com:ercius/Xi-cam.NCEM.git
 
 Create a new conda environment. Some dependencies are installed by pip.
+
 .. code-block:: bash
     conda create --name xicam2 python=3.7 numpy scipy dask jupyter h5py pyqtgraph matplotlib
     
@@ -58,6 +60,7 @@ Create a new conda environment. Some dependencies are installed by pip.
     pip install -e Xi-cam\
 
 Update all xicam packages.
+
 .. code-block:: bash
     #!/bin/bash
     
