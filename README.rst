@@ -58,9 +58,9 @@ Create a new conda environment. Some dependencies are installed by pip.
     pip install -e Xi-cam\
 
 Update all xicam packages.
-
 .. code-block:: bash
     #!/bin/bash
+    
     echo xi-cam
 
     cd ./xi-cam
