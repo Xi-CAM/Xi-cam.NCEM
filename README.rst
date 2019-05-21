@@ -56,3 +56,28 @@ Create a new conda environment. Some dependencies are installed by pip.
     pip install -e Xi-cam.NCEM\
     
     pip install -e Xi-cam\
+
+Update all xicam packages.
+.. code-block:: bash
+#!/bin/bash
+echo xi-cam
+cd ./xi-cam
+git pull
+
+echo xi-cam.plugins
+cd ../xi-cam.plugins
+git pull
+
+echo xi-cam.gui
+cd ../xi-cam.gui
+git pull
+
+echo xi-cam.core
+cd ../xi-cam.core
+git pull
+
+echo xicam.NCEM
+cd ../xi-cam.NCEM
+git pull
+
+cd ..
