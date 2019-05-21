@@ -60,33 +60,33 @@ Create a new conda environment. Some dependencies are installed by pip.
 Update all xicam packages.
 
 .. code-block:: bash
-#!/bin/bash
-echo xi-cam
+    #!/bin/bash
+    echo xi-cam
 
-cd ./xi-cam
+    cd ./xi-cam
 
-git pull
+    git pull
 
-echo xi-cam.plugins
+    echo xi-cam.plugins
 
-cd ../xi-cam.plugins
+    cd ../xi-cam.plugins
 
-git pull
+    git pull
 
-echo xi-cam.gui
+    echo xi-cam.gui
 
-cd ../xi-cam.gui
+    cd ../xi-cam.gui
 
-git pull
+    git pull
 
-echo xi-cam.core
+    echo xi-cam.core
 
-cd ../xi-cam.core
+    cd ../xi-cam.core
 
-git pull
+    git pull
 
-echo xicam.NCEM
-cd ../xi-cam.NCEM
-git pull
+    echo xicam.NCEM
+    cd ../xi-cam.NCEM
+    git pull
 
-cd ..
+    cd ..
