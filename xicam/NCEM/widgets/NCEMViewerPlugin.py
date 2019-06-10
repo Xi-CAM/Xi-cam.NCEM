@@ -73,7 +73,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             msg.logMessage(f'Header object contained no frames with field {field}.', msg.ERROR)
         
         for ii in header:
-            print('header types = '.format(type(ii)))
+            msg.logMessage('header types = '.format(type(ii)))
         
         if data:
             # data = np.squeeze(data) #test for 1D spectra
