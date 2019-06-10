@@ -36,11 +36,11 @@ class EMDPlugin(DataHandlerPlugin):
 
     descriptor_keys = ['object_keys']
 
-    def __call__(self, index_t):
+    def __call__(self, index_t, dsetNum=0):
         im1 = None
         if not self.veloxFlag:
             #Berkeley EMD
-            dataset0 = self.emd1.list_emds[0]['data'] #get the dataset in the first group found
+            dataset0 = self.emd1.list_emds[dsetNum]['data'] #get the dataset in the first group found
             if dataset0.ndim == 2:
                 im1 = dataset0
             elif dataset0.ndim == 3:
@@ -49,7 +49,7 @@ class EMDPlugin(DataHandlerPlugin):
                 im1 = dataset0[index_t,0,:,:]
         else:
             #Velox EMD
-            dataset0 = self.emd1.list_data[0]['Data']
+            dataset0 = self.emd1.list_data[dsetNum]['Data']
             if dataset0.ndim == 2:
                 im1 = dataset0
             elif dataset0.ndim == 3:
@@ -96,7 +96,7 @@ class EMDPlugin(DataHandlerPlugin):
 
             num_t = cls.num_t(metadata)
             num_z = 1
-
+            
             for index_z in range(num_z):
                 for index_t in range(num_t):
                     yield embedded_local_event_doc(descriptor_uid,
