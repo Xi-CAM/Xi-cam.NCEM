@@ -6,12 +6,9 @@ from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
-#import numpy as np
+
 from xicam.core import msg
 from xicam.gui.widgets.dynimageview import DynImageView
-#import pyqtgraph as pg
-
-# TODO: single-source with SAXSViewerPlugin
 
 
 class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
@@ -19,8 +16,6 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
 
         # Add axes
         self.axesItem = PlotItem()
-        # self.axesItem.setLabel('bottom', u'q ()')  # , units='s')
-        # self.axesItem.setLabel('left', u'q ()')
         self.axesItem.axes['left']['item'].setZValue(10)
         self.axesItem.axes['top']['item'].setZValue(10)
         if 'view' not in kwargs: kwargs['view'] = self.axesItem
@@ -76,9 +71,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             print('header types = '.format(type(ii)))
         
         if data:
-            # data = np.squeeze(data) #test for 1D spectra
             if data.ndim > 1:
-                # kwargs['transform'] = QTransform(0, -1, 1, 0, 0, data.shape[-2])
                 #NOTE PAE: for setImage:
                 #   use setImage(xVals=timeVals) to set the values on the slider for 3D data
                 try:
@@ -93,7 +86,10 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                     units0 = ('', '')
                     msg.logMessage('NCEMviewer: No pixel size or units detected')
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
+                
+                # Cludge to save the scale values for accessing later by an exporter.
+                it = super(NCEMViewerPlugin, self).getImageItem()
+                it.scaleNCEM = scale0 #this is accessible in the custom pyqtgraph_tiffexporter
+                
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])
-            #else:
-            #    msg.logMessage('Cant load 1D data.')
