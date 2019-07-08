@@ -11,13 +11,23 @@ import pyqtgraph as pg
 
 from xicam.core import msg
 
+class DynImageView_patch(DynImageView):
+    ''' Patch to connect keyboard presses in timeline
+    to emit a signal. This will be added as a patch to
+    xicam in general.
+    '''
+    def evalKeyState(self):
+        super(DynImageView_patch, self).evalKeyState()
+        (ind, time) = self.timeIndex(self.timeLine)
+        self.sigTimeChanged.emit(ind, time)
+
 class FFTViewerPlugin(QWidgetPlugin):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
         super(FFTViewerPlugin, self).__init__(*args, **kwargs)
 
         # Two Dynamic image views (maybe only need 1 for the main data. The FFT can be an ImageView()
         self.Rimageview = NCEMViewerPlugin()
-        self.Fimageview = DynImageView()
+        self.Fimageview = DynImageView_patch()
         # Keep Y-axis as is
         self.Rimageview.view.invertY(True)
         self.Fimageview.view.invertY(True)
@@ -53,10 +63,10 @@ class FFTViewerPlugin(QWidgetPlugin):
 
         # Init vars
         self.header = None
-
+        self.autoLevels = True
         # Set header
         if header: self.setHeader(header, field)
-
+    
     def updateFFT(self):
         '''Update the FFT diffractogram based on the Real space
         ROI location and size
@@ -84,7 +94,8 @@ class FFTViewerPlugin(QWidgetPlugin):
             dataSlice = data[int(y/scale0[1]):int((y+h)/scale0[1]),int(x/scale0[0]):int((x+w)/scale0[0])]
             
             fft = np.fft.fft2(dataSlice)
-            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1))
+            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1), autoLevels = self.autoLevels)
+            self.autoLevels = False
             self.Rroi.setPen(pg.mkPen('w'))
         except ValueError:
             self.Rroi.setPen(pg.mkPen('r'))
