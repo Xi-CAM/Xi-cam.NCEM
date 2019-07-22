@@ -42,15 +42,13 @@ class FFTViewerPlugin(QWidgetPlugin):
         # Add ROI to real image
         # Retrieve the metadata for pixel scale and units
         try:
-            descriptorsTee = itertools.tee(header.descriptors, 1)[0] #tee the descriptors generator once
-            _ = next(descriptorsTee) #start document
-            headerTitle, md = next(descriptorsTee) #descriptor document with metadata
+            md = self.header.descriptordocs[0]
             scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
             units0 = (md['PhysicalSizeXUnit'], md['PhysicalSizeYUnit'])
         except:
             scale0 = (1, 1)
             units0 = ('','')
-            msg.logMessage('No pixel size')
+            msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
         shape = (50, 50) #header.descriptors[0]['ArrayShape']
         self.Rroi = pg.RectROI(pos=(0, 0), size = (scale0[0] * shape[0], scale0[1] * shape[1]))
         Rview = self.Rimageview.view.vb  # type: pg.ViewBox
@@ -78,15 +76,13 @@ class FFTViewerPlugin(QWidgetPlugin):
             
             # Get the pixel size
             try:
-                descriptorsTee = itertools.tee(self.header.descriptors, 1)[0] #tee the descriptors generator once
-                _ = next(descriptorsTee) #start document
-                headerTitle, md = next(descriptorsTee) #descriptor document with metadata
+                md = self.header.descriptordocs[0]
                 scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
                 units0 = (md['PhysicalSizeXUnit'], md['PhysicalSizeYUnit'])
             except:
                 scale0 = (1, 1)
                 units0 = ('', '')
-                msg.logMessage('No pixel size')
+                msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
             
             # Extract the data in the ROI
             x,y = self.Rroi.pos()
