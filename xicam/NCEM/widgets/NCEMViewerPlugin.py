@@ -67,9 +67,6 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         except IndexError:
             msg.logMessage(f'Header object contained no frames with field {field}.', msg.ERROR)
         
-        for ii in header:
-            msg.logMessage('header types = '.format(type(ii)))
-        
         if data:
             if data.ndim > 1:
                 #NOTE PAE: for setImage:
@@ -85,6 +82,11 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                     msg.logMessage('NCEMviewer: No pixel size or units detected')
                     
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
+                
+                from PyQt5.QtCore import pyqtRemoveInputHook
+                from pdb import set_trace
+                pyqtRemoveInputHook()
+                set_trace()
                 
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])
