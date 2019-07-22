@@ -76,15 +76,14 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 #   use setImage(xVals=timeVals) to set the values on the slider for 3D data
                 try:
                     # Retrieve the metadata for pixel scale and units
-                    descriptorsTee = itertools.tee(header.descriptors, 1)[0] #tee the descriptors generator once
-                    _ = next(descriptorsTee) #start document
-                    headerTitle, md = next(descriptorsTee) #descriptor document with metadata
+                    md = header.descriptordocs[0]
                     scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
                     units0 = (md['PhysicalSizeXUnit'], md['PhysicalSizeYUnit'])
                 except:
                     scale0 = (1, 1)
                     units0 = ('', '')
                     msg.logMessage('NCEMviewer: No pixel size or units detected')
+                    
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 
                 # Cludge to save the scale values for accessing later by an exporter.
