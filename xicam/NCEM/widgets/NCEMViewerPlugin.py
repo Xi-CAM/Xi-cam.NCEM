@@ -83,10 +83,5 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                     
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 
-                from PyQt5.QtCore import pyqtRemoveInputHook
-                from pdb import set_trace
-                pyqtRemoveInputHook()
-                set_trace()
-                
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])
