@@ -41,16 +41,10 @@ class FFTViewerPlugin(QWidgetPlugin):
 
         # Add ROI to real image
         # Retrieve the metadata for pixel scale and units
-        try:
-            md = self.header.descriptordocs[0]
-            scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
-            units0 = (md['PhysicalSizeXUnit'], md['PhysicalSizeYUnit'])
-        except:
-            scale0 = (1, 1)
-            units0 = ('','')
-            msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
-        shape = (50, 50) #header.descriptors[0]['ArrayShape']
-        self.Rroi = pg.RectROI(pos=(0, 0), size = (scale0[0] * shape[0], scale0[1] * shape[1]))
+        
+        #shape = (50, 50) # in pixels
+        #self.Rroi = pg.RectROI(pos=(0, 0), size = (scale0[0] * shape[0], scale0[1] * shape[1]))
+        self.Rroi = pg.RectROI(pos=(0, 0), size = (1,1))
         Rview = self.Rimageview.view.vb  # type: pg.ViewBox
         Rview.addItem(self.Rroi)
 
@@ -64,7 +58,21 @@ class FFTViewerPlugin(QWidgetPlugin):
         self.autoLevels = True
         # Set header
         if header: self.setHeader(header, field)
-    
+        
+        #Initialize real space ROI size
+        try:
+            md = self.header.descriptordocs[0]
+            scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
+            units0 = (md['PhysicalSizeXUnit'], md['PhysicalSizeYUnit'])
+        except:
+            scale0 = (1, 1)
+            units0 = ('','')
+            msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
+        msg.logMessage('FFTviewPlugin: pixel size = {}'.format(scale0))
+        self.Rroi.setPos((0,0))
+        self.Rroi.setSize((scale0[0] * 50, scale0[1] * 50))
+        self.Rimageview.autoRange()
+        
     def updateFFT(self):
         '''Update the FFT diffractogram based on the Real space
         ROI location and size
