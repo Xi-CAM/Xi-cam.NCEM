@@ -86,9 +86,5 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                     
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
                 
-                # Cludge to save the scale values for accessing later by an exporter.
-                it = super(NCEMViewerPlugin, self).getImageItem()
-                it.scaleNCEM = scale0 #this is accessible in the custom pyqtgraph_tiffexporter
-                
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])
