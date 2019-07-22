@@ -44,7 +44,7 @@ class NCEMPlugin(GUIPlugin):
         self.stages = {
             'View': GUILayout(self.rawview, top=self.toolbar, right=self.metadataview),
             #'View': GUILayout(self.rawview, top=self.toolbar),
-            '4D STEM': GUILayout(self.fourDview, ),
+            #'4D STEM': GUILayout(self.fourDview, ),
             'FFT View': GUILayout(self.fftview, )
         }
         super(NCEMPlugin, self).__init__()
