@@ -35,7 +35,7 @@ class NCEMPlugin(GUIPlugin):
 
         self.fftview = TabView(self.headermodel, self.selectionmodel, widgets.FFTViewerPlugin, 'primary')
 
-        self.fourDview = TabView(self.headermodel, self.selectionmodel, widgets.FourDImageView, 'primary')
+        #self.fourDview = TabView(self.headermodel, self.selectionmodel, widgets.FourDImageView, 'primary')
 
         self.metadataview = MetadataView(self.headermodel, self.selectionmodel)
 
