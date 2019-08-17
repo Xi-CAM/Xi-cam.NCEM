@@ -121,12 +121,15 @@ class EMDPlugin(DataHandlerPlugin):
         The number of slices in the last dimension (F-ordering) for Velox data sets
         
         '''
-        if not metadata['veloxFlag']:
-            #EMD Berkeley
-            out = metadata['shape'][0] #Velox files are written incorrectly using Fortran ordering
+        if len(metadata['shape']) < 3:
+            out = 1
         else:
-            #EMD Velox
-            out = metadata['shape'][-1]
+            if not metadata['veloxFlag']:
+                #EMD Berkeley
+                out = metadata['shape'][0] #Velox files are written incorrectly using Fortran ordering
+            else:
+                #EMD Velox
+                out = metadata['shape'][-1]
 
         return out
 
