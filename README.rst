@@ -27,11 +27,9 @@ The Xi-cam.NCEM plugin implements two types of image viewing
 Installation
 ============
 
-Installation is only supported using source code available at the Camera Github Repositories
+Here are a set of steps to install this program using git, conda, and pip on Windows. Installation is only supported using source code available at the Camera Github Repositories
 
-Here are a set of steps to install this program using git, conda, and pip on Windows:
-
-
+Clone the following repositories from github
     git clone git@github.com:lbl-camera/Xi-cam.gui.git
     
     git clone git@github.com:lbl-camera/Xi-cam.plugins.git
@@ -42,21 +40,23 @@ Here are a set of steps to install this program using git, conda, and pip on Win
 
     git clone git@github.com:ercius/Xi-cam.NCEM.git
 
-Create a new conda environment. Some dependencies are installed by pip.
-
+Create and activate a new conda environment. Some dependencies are installed by pip.
     conda create --name xicam2 python=3.7 numpy scipy dask jupyter h5py pyqtgraph matplotlib
     
     activate xicam2
+
+
+Run the following pip commands from the parent directory of the cloned repositories above.
+ - Note: Slashes (\\ on windows and / on Linux or Mac) at the end of the line are important to force a local installation rather than downloading from pypi
+    pip install -e Xi-cam.core\\
     
-    pip install -e Xi-cam.core\
+    pip install -e Xi-cam.plugins\\
     
-    pip install -e Xi-cam.plugins\
+    pip install -e Xi-cam.gui\\
     
-    pip install -e Xi-cam.gui\
+    pip install -e Xi-cam.NCEM\\
     
-    pip install -e Xi-cam.NCEM\
-    
-    pip install -e Xi-cam\
+    pip install -e Xi-cam\\
 
 Update all xicam packages.
 
