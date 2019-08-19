@@ -75,11 +75,29 @@ class DMPlugin(DataHandlerPlugin):
         return out
         
     @classmethod
+    def parseDataFile(path):
+        return cls.metadata(path)
+    
+    @classmethod
+    def getStartDoc(cls, paths, start_uid):
+        return start_doc(start_uid=start_uid, metadata={'paths': paths})
+
+    @classmethod
+    def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
+        md = cls.parseTXTFile(paths[0])
+        md.update(cls.metadata(paths[0]))
+        md.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
+
+        # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
+        # md = dict([(key, md.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
+        yield descriptor_doc(start_uid, descriptor_uid, metadata=md)
+
+    @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
-    def parseDataFile(cls, path):
+    def metadata(path):
+        metaData = {}
         with dm.fileDM(path,on_memory = True) as dm1:
             # Save most useful metaData
-            metaData = {}
             
             #Only keep the most useful tags as meta data
             for kk, ii in dm1.allTags.items():
@@ -121,28 +139,5 @@ class DMPlugin(DataHandlerPlugin):
             metaData['PhysicalSizeYUnit'] = metaData['Calibrations.Dimension.2.Units']
             
             metaData['FileName'] = path
-            
-        return metaData
-    
-    @classmethod
-    def getStartDoc(cls, paths, start_uid):
-        return start_doc(start_uid=start_uid, metadata={'paths': paths})
-
-    @classmethod
-    def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
-        metadata = cls.parseTXTFile(paths[0])
-        metadata.update(cls.parseDataFile(paths[0]))
-        metadata.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
-
-        # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
-        # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
-        yield descriptor_doc(start_uid, descriptor_uid, metadata=metadata)
-
-    @staticmethod
-    @functools.lru_cache(maxsize=10, typed=False)
-    def metadata(path):
-        with dm.fileDM(path,on_memory = True) as dm1:
-            pass
-        metaData = dm1.allTags
 
         return metaData
