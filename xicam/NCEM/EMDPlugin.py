@@ -96,7 +96,7 @@ class EMDPlugin(DataHandlerPlugin):
 
             num_t = cls.num_t(metadata)
             num_z = 1
-            
+                        
             for index_z in range(num_z):
                 for index_t in range(num_t):
                     yield embedded_local_event_doc(descriptor_uid,
@@ -185,10 +185,10 @@ class EMDPlugin(DataHandlerPlugin):
             #Store the X and Y pixel size, offset and unit
             metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
             metaData['PhysicalSizeXOrigin'] = dimX[0]
-            metaData['PhysicalSizeXUnit'] = dimX.attrs['units']
+            metaData['PhysicalSizeXUnit'] = dimX.attrs['units'].decode('utf-8')
             metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
             metaData['PhysicalSizeYOrigin'] = dimY[0]
-            metaData['PhysicalSizeYUnit'] = dimY.attrs['units']
+            metaData['PhysicalSizeYUnit'] = dimY.attrs['units'].decode('utf-8')
 
             metaData['shape'] = dataset0.shape
 
@@ -233,7 +233,7 @@ class EMDPlugin(DataHandlerPlugin):
     def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
         metadata = cls.parseTXTFile(paths[0])
         metadata.update(cls.parseDataFile(paths[0]))
-        metadata.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
+        metadata.update({'object_keys': {'Device0': ['Device name0']}})  # TODO: add device detection
 
         # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
         # metadata = dict([(key, metadata.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
