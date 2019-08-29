@@ -9,8 +9,6 @@ from xicam.gui.widgets.dynimageview import DynImageView
 from .NCEMViewerPlugin import NCEMViewerPlugin
 import pyqtgraph as pg
 
-from xicam.core import msg
-
 class DynImageView_patch(DynImageView):
     ''' Patch to connect keyboard presses in timeline
     to emit a signal. This will be added as a patch to
