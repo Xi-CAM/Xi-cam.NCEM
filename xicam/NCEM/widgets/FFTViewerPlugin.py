@@ -45,7 +45,11 @@ class FFTViewerPlugin(QWidgetPlugin):
         self.Rroi = pg.RectROI(pos=(0, 0), size = (1,1))
         Rview = self.Rimageview.view.vb  # type: pg.ViewBox
         Rview.addItem(self.Rroi)
-
+        
+        # Hide the menu and roi buttons in the FFT view
+        self.Fimageview.ui.menuBtn.setParent(None)
+        self.Fimageview.ui.roiBtn.setParent(None)
+        
         # Wireup signals
         self.Rroi.sigRegionChanged.connect(self.updateFFT)
         self.Rimageview.sigTimeChanged.connect(

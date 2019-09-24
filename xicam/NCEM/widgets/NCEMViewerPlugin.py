@@ -45,14 +45,15 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         self.ui.gridLayout.addWidget(self.resetLUTBtn, 3, 1, 1, 1)
         self.resetLUTBtn.clicked.connect(self.autoLevels)
 
-        # Hide ROI button and rearrange
+        # Hide ROI button and the Menu button and rearrange
         self.ui.roiBtn.setParent(None)
-        self.ui.gridLayout.addWidget(self.ui.menuBtn, 1, 1, 1, 1)
+        self.ui.menuBtn.setParent(None)
+        #self.ui.gridLayout.addWidget(self.ui.menuBtn, 1, 1, 1, 1)
         self.ui.gridLayout.addWidget(self.ui.graphicsView, 0, 0, 3, 1)
 
         # Setup coordinates label
-        self.coordinatesLbl = QLabel('--COORDINATES WILL GO HERE--')
-        self.ui.gridLayout.addWidget(self.coordinatesLbl, 3, 0, 1, 1, alignment=Qt.AlignHCenter)
+        #self.coordinatesLbl = QLabel('--COORDINATES WILL GO HERE--')
+        #self.ui.gridLayout.addWidget(self.coordinatesLbl, 3, 0, 1, 1, alignment=Qt.AlignHCenter)
         
         # Set header
         if header: self.setHeader(header, field)
