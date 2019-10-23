@@ -45,7 +45,7 @@ OR the development version from Ercius
     git clone git@github.com:ercius/Xi-cam.NCEM.git
 
 Create and activate a new conda environment. Some dependencies are installed by pip.
-    conda create --name xicam2 python=3.7 numpy scipy dask jupyter h5py pyqtgraph matplotlib
+    conda create --name xicam2 python=3.7 numpy scipy dask jupyter h5py pyqtgraph matplotlib netcdf4 xarray requests astropy
     
     activate xicam2
 
@@ -95,3 +95,38 @@ Update all xicam packages.
     git pull
 
     cd ..
+
+Debugging
+=========
+Xicam allows the user to just call the xicam executable to run which is very convenient. However, there is then no way to capture simple console output (other than msg.logMessage) or use pdb debugging. Debugging in QT is possible based on this StackOverflow answer.
+
+Follow these steps (copied here for my and others convenience if needed):
+
+Find the xicam-script.pyw file in your environment's /Scripts folder
+for example ~/Anaconda3/envs/xicam2/Scripts
+Copy this file to xicam-script.py (no w in the extension)
+If you now execute python xicam-script.py the console output is shown in that console.
+Incidentally, use pythonw xicam-script.py to stop printing to console
+To enable debugging insert this code where you want to stop the program
+from PyQt5.QtCore import pyqtRemoveInputHook
+from pdb import set_trace
+pyqtRemoveInputHook()
+set_trace()
+Resuming might be possible using
+from PyQt5.QtCore import pyqtRestoreInputHook
+pyqtRestoreInputHook()
+and then pressing CTRL-C to stop the command printing. I have not tried this though.
+
+Logging
+=======
+Logging
+The log directoy location was recently moved. Xicam now uses appdirs (from pypi) to determine the location of certainpaths. These are now set in:
+Xi-cam.core\xicam\core\paths.py
+
+On my windows machine the log is now located at:
+C:\Users\Peter.000\AppData\Local\xicam\xicam\Cache\logs\out.log
+
+To determine this location:
+(xicam) > python
+>> import appdirs
+>> appdirs.user_cache_dir()
