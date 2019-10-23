@@ -124,7 +124,7 @@ The log directoy location was recently moved. Xicam now uses appdirs (from pypi)
 Xi-cam.core\xicam\core\paths.py
 
 On my windows machine the log is now located at:
-C:\Users\Peter.000\AppData\Local\xicam\xicam\Cache\logs\out.log
+C:\Users\<username>\AppData\Local\xicam\xicam\Cache\logs\out.log
 
 To determine this location:
 (xicam) > python
