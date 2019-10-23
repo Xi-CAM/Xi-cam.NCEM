@@ -171,7 +171,11 @@ class EMDPlugin(DataHandlerPlugin):
                 metaData.update(emd1.file_hdl['/comments'].attrs)
             except:
                 pass
-
+            try:
+                metaData.update(emd1.file_hdl['/stage'].attrs)
+            except:
+                pass
+                
             if dataset0.ndim == 2:
                 dimY = dataGroup['dim1']
                 dimX = dataGroup['dim2']
