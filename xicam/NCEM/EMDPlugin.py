@@ -175,7 +175,11 @@ class EMDPlugin(DataHandlerPlugin):
                 metaData.update(emd1.file_hdl['/stage'].attrs)
             except:
                 pass
-                
+            
+            for k,v in metaData.items():
+                if isinstance(v,bytes):
+                    metaData[k] = v.decode('UTF8')
+            
             if dataset0.ndim == 2:
                 dimY = dataGroup['dim1']
                 dimX = dataGroup['dim2']
