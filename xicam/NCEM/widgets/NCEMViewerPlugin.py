@@ -1,7 +1,7 @@
 import itertools
 
 from xicam.plugins import QWidgetPlugin
-from pyqtgraph import ImageView, PlotItem
+from pyqtgraph import ImageView, PlotItem, FileDialog
 from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
@@ -9,7 +9,6 @@ from qtpy.QtGui import *
 
 from xicam.core import msg
 from xicam.gui.widgets.dynimageview import DynImageView
-
 
 class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
@@ -44,7 +43,16 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         # self.resetLUTBtn.setObjectName("resetLUTBtn")
         self.ui.gridLayout.addWidget(self.resetLUTBtn, 3, 1, 1, 1)
         self.resetLUTBtn.clicked.connect(self.autoLevels)
-
+        
+        # Export button
+        self.exportBtn = QPushButton('Export')
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(1)
+        sizePolicy.setHeightForWidth(self.exportBtn.sizePolicy().hasHeightForWidth())
+        self.ui.gridLayout.addWidget(self.exportBtn, 4, 1, 1, 1)
+        self.exportBtn.clicked.connect(self.export)
+        
         # Hide ROI button and the Menu button and rearrange
         self.ui.roiBtn.setParent(None)
         self.ui.menuBtn.setParent(None)
@@ -86,3 +94,20 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                 
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])
+    
+    def export(self):
+        from tifffile import imsave
+
+        #outName = self.fileSaveDialog(filter=["*.tif"])
+        dlg = FileDialog()
+        outName = dlg.getSaveFileName(filter='tif')
+        msg.logMessage(outName)
+        
+        md = self.header.descriptordocs[0]
+        scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
+        msg.logMessage('meta data = {}'.format(scale0[0]))
+        
+        image = self.header.meta_array('primary')
+        
+        imsave(''.join(outName),image,imagej=True,resolution=(scale0[0], scale0[1]), metadata={'unit':'nm'})
+        
