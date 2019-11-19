@@ -104,10 +104,9 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         msg.logMessage(outName)
         
         md = self.header.descriptordocs[0]
-        scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
-        msg.logMessage('meta data = {}'.format(scale0[0]))
+        scale0 = (float(md['PhysicalSizeX']), float(md['PhysicalSizeY']))
+        msg.logMessage('meta data = {}'.format(type(scale0[0])))
         
         image = self.header.meta_array('primary')
         msg.logMessage('image type = {}'.format(type(image)))
         imsave('.'.join(outName),image,imagej=True,resolution=scale0, metadata={'unit':'nm'})
-        
