@@ -70,7 +70,7 @@ class FFTViewerPlugin(QWidgetPlugin):
             scale0 = (1, 1)
             units0 = ('','')
             msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
-        msg.logMessage('FFTviewPlugin: pixel size = {}'.format(scale0))
+        #msg.logMessage('FFTviewPlugin: pixel size = {}'.format(scale0))
         self.Rroi.setPos((0,0))
         self.Rroi.setSize((scale0[0] * 50, scale0[1] * 50))
         self.Rimageview.autoRange()
