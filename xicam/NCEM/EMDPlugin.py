@@ -180,6 +180,34 @@ class EMDPlugin(DataHandlerPlugin):
                 if isinstance(v,bytes):
                     metaData[k] = v.decode('UTF8')
             
+            # Get the dim vectors
+            dims = emd1.get_emddims(dataGroup)
+            if dataset0.ndim == 2:
+                dimZ = None
+                dimY = dims[0] # dataGroup['dim1']
+                dimX = dims[1] # dataGroup['dim2']
+            elif dataset0.ndim == 3:
+                dimZ = dims[0]
+                dimY = dims[1] #dataGroup['dim2']
+                dimX = dims[2] #dataGroup['dim3']
+            elif dataset0.ndim == 4:
+                dimZ = dims[1]
+                dimY = dims[2] # dataGroup['dim3']
+                dimX = dims[3] # dataGroup['dim4']
+            
+            #Store the X and Y pixel size, offset and unit
+            metaData['PhysicalSizeX'] = dimX[0][1] - dimX[0][0]
+            metaData['PhysicalSizeXOrigin'] = dimX[0][0]
+            metaData['PhysicalSizeXUnit'] = dimX[2]
+            metaData['PhysicalSizeY'] = dimY[0][1] - dimY[0][0]
+            metaData['PhysicalSizeYOrigin'] = dimY[0][0]
+            metaData['PhysicalSizeYUnit'] = dimY[2]
+            #metaData['PhysicalSizeZ'] = dimZ[0][1] - dimZ[0][0]
+            #metaData['PhysicalSizeZOrigin'] = dimZ[0][0]
+            #metaData['PhysicalSizeZUnit'] = dimZ[2]
+            
+            
+            '''
             if dataset0.ndim == 2:
                 dimY = dataGroup['dim1']
                 dimX = dataGroup['dim2']
@@ -197,7 +225,8 @@ class EMDPlugin(DataHandlerPlugin):
             metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
             metaData['PhysicalSizeYOrigin'] = dimY[0]
             metaData['PhysicalSizeYUnit'] = dimY.attrs['units'].decode('utf-8')
-
+            '''
+            
             metaData['shape'] = dataset0.shape
 
         except IndexError:
