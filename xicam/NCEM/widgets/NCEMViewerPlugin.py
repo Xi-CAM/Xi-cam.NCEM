@@ -108,6 +108,6 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         msg.logMessage('meta data = {}'.format(scale0[0]))
         
         image = self.header.meta_array('primary')
-        
-        imsave(''.join(outName),image,imagej=True,resolution=(scale0[0], scale0[1]), metadata={'unit':'nm'})
+        msg.logMessage('image type = {}'.format(type(image)))
+        imsave('.'.join(outName),image,imagej=True,resolution=scale0, metadata={'unit':'nm'})
         
