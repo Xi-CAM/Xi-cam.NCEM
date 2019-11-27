@@ -225,27 +225,6 @@ class EMDPlugin(DataHandlerPlugin):
             #metaData['PhysicalSizeZOrigin'] = dimZ[0][0]
             #metaData['PhysicalSizeZUnit'] = dimZ[2]
             
-            
-            '''
-            if dataset0.ndim == 2:
-                dimY = dataGroup['dim1']
-                dimX = dataGroup['dim2']
-            elif dataset0.ndim == 3:
-                dimY = dataGroup['dim2']
-                dimX = dataGroup['dim3']
-            elif dataset0.ndim == 4:
-                dimY = dataGroup['dim3']
-                dimX = dataGroup['dim4']
-
-            #Store the X and Y pixel size, offset and unit
-            metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
-            metaData['PhysicalSizeXOrigin'] = dimX[0]
-            metaData['PhysicalSizeXUnit'] = dimX.attrs['units'].decode('utf-8')
-            metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
-            metaData['PhysicalSizeYOrigin'] = dimY[0]
-            metaData['PhysicalSizeYUnit'] = dimY.attrs['units'].decode('utf-8')
-            '''
-            
             metaData['shape'] = dataset0.shape
 
         except IndexError:
