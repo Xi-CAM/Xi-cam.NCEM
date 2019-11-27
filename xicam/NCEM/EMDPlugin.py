@@ -23,6 +23,7 @@ from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descri
 from xicam.core import msg
 
 from numpy import where as npwhere
+from numpy import ndarray as ndarray
 from ncempy.io import emd #EMD BErkeley datasets
 from ncempy.io import emdVelox #EMD Velox datasets
 
@@ -154,31 +155,49 @@ class EMDPlugin(DataHandlerPlugin):
             emd1 = emd.fileEMD(path,readonly=True)
             dataGroup = emd1.list_emds[0]
             dataset0 = dataGroup['data'] #get the dataset in the first group found
-
+            
             try:
-                metaData.update(emd1.file_hdl['/user'].attrs)
+                metaData['user'] = {}
+                metaData['user'].update(emd1.file_hdl['/user'].attrs)
             except:
                 pass
             try:
-                metaData.update(emd1.file_hdl['/microscope'].attrs)
+                metaData['microscope'] = {}
+                metaData['microscope'].update(emd1.file_hdl['/microscope'].attrs)
             except:
                 pass
             try:
-                metaData.update(emd1.file_hdl['/sample'].attrs)
+                metaData['sample'] = {}
+                metaData['sample'].update(emd1.file_hdl['/sample'].attrs)
             except:
                 pass
             try:
-                metaData.update(emd1.file_hdl['/comments'].attrs)
+                metaData['comments'] = {}
+                metaData['comments'].update(emd1.file_hdl['/comments'].attrs)
             except:
                 pass
             try:
-                metaData.update(emd1.file_hdl['/stage'].attrs)
+                metaData['stage'] = {}
+                metaData['stage'].update(emd1.file_hdl['/stage'].attrs)
+            except:
+                pass
+            try:
+                name = dataGroup.name.split('/')[-1]
+                metaData[name] = {}
+                metaData[name].update(dataGroup.attrs)
             except:
                 pass
             
-            for k,v in metaData.items():
-                if isinstance(v,bytes):
-                    metaData[k] = v.decode('UTF8')
+            # Modify types if needed
+            def cleandict(md):
+                for k, v in md.items():
+                    if isinstance(v, dict):
+                        cleandict(v)
+                    elif isinstance(v, bytes):
+                            md[k] = v.decode('UTF8')
+                    elif isinstance(v, ndarray):
+                        md[k] = tuple(v)
+            cleandict(metaData)
             
             # Get the dim vectors
             dims = emd1.get_emddims(dataGroup)
