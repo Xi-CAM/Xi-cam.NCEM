@@ -114,13 +114,12 @@ class SERPlugin(DataHandlerPlugin):
     @staticmethod
     @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
-        with ser.fileSER(path) as ser1:
+        with ser.fileSER(path,emifile=True) as ser1:
             data, metaData = ser1.getDataset(0) #have to get 1 image and its meta data
-            emiName = path[:-6] + '.emi'
+            
             #Get extra meta data from the EMI file if it exists
-            if os.path.isfile(emiName):
-                emi = ser1.read_emi(emiName)
-                metaData.update(emi)
+            if ser1._emi:
+                metaData.update(ser1._emi)
         metaData.update(ser1.head) #some header data for the ser file
         
         return metaData
