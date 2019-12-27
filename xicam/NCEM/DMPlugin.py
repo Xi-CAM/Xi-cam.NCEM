@@ -1,6 +1,6 @@
 import functools
 
-from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
+from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
     embedded_local_event_doc
 from xicam.core import msg
 

@@ -18,11 +18,12 @@ Notes:
 import json
 import functools
 
-from xicam.plugins.DataHandlerPlugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
+from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
     embedded_local_event_doc
 from xicam.core import msg
 
 from numpy import where as npwhere
+from numpy import ndarray as ndarray
 from ncempy.io import emd #EMD BErkeley datasets
 from ncempy.io import emdVelox #EMD Velox datasets
 
@@ -154,42 +155,76 @@ class EMDPlugin(DataHandlerPlugin):
             emd1 = emd.fileEMD(path,readonly=True)
             dataGroup = emd1.list_emds[0]
             dataset0 = dataGroup['data'] #get the dataset in the first group found
-
+            
             try:
-                metaData.update(emd1.file_hdl['/user'].attrs)
+                metaData['user'] = {}
+                metaData['user'].update(emd1.file_hdl['/user'].attrs)
             except:
                 pass
             try:
-                metaData.update(emd1.file_hdl['/microscope'].attrs)
+                metaData['microscope'] = {}
+                metaData['microscope'].update(emd1.file_hdl['/microscope'].attrs)
             except:
                 pass
             try:
-                metaData.update(emd1.file_hdl['/sample'].attrs)
+                metaData['sample'] = {}
+                metaData['sample'].update(emd1.file_hdl['/sample'].attrs)
             except:
                 pass
             try:
-                metaData.update(emd1.file_hdl['/comments'].attrs)
+                metaData['comments'] = {}
+                metaData['comments'].update(emd1.file_hdl['/comments'].attrs)
             except:
                 pass
-
+            try:
+                metaData['stage'] = {}
+                metaData['stage'].update(emd1.file_hdl['/stage'].attrs)
+            except:
+                pass
+            try:
+                name = dataGroup.name.split('/')[-1]
+                metaData[name] = {}
+                metaData[name].update(dataGroup.attrs)
+            except:
+                pass
+            
+            # Modify types if needed
+            def cleandict(md):
+                for k, v in md.items():
+                    if isinstance(v, dict):
+                        cleandict(v)
+                    elif isinstance(v, bytes):
+                            md[k] = v.decode('UTF8')
+                    elif isinstance(v, ndarray):
+                        md[k] = tuple(v)
+            cleandict(metaData)
+            
+            # Get the dim vectors
+            dims = emd1.get_emddims(dataGroup)
             if dataset0.ndim == 2:
-                dimY = dataGroup['dim1']
-                dimX = dataGroup['dim2']
+                dimZ = None
+                dimY = dims[0] # dataGroup['dim1']
+                dimX = dims[1] # dataGroup['dim2']
             elif dataset0.ndim == 3:
-                dimY = dataGroup['dim2']
-                dimX = dataGroup['dim3']
+                dimZ = dims[0]
+                dimY = dims[1] #dataGroup['dim2']
+                dimX = dims[2] #dataGroup['dim3']
             elif dataset0.ndim == 4:
-                dimY = dataGroup['dim3']
-                dimX = dataGroup['dim4']
-
+                dimZ = dims[1]
+                dimY = dims[2] # dataGroup['dim3']
+                dimX = dims[3] # dataGroup['dim4']
+            
             #Store the X and Y pixel size, offset and unit
-            metaData['PhysicalSizeX'] = dimX[1] - dimX[0]
-            metaData['PhysicalSizeXOrigin'] = dimX[0]
-            metaData['PhysicalSizeXUnit'] = dimX.attrs['units'].decode('utf-8')
-            metaData['PhysicalSizeY'] = dimY[1] - dimY[0]
-            metaData['PhysicalSizeYOrigin'] = dimY[0]
-            metaData['PhysicalSizeYUnit'] = dimY.attrs['units'].decode('utf-8')
-
+            metaData['PhysicalSizeX'] = dimX[0][1] - dimX[0][0]
+            metaData['PhysicalSizeXOrigin'] = dimX[0][0]
+            metaData['PhysicalSizeXUnit'] = dimX[2]
+            metaData['PhysicalSizeY'] = dimY[0][1] - dimY[0][0]
+            metaData['PhysicalSizeYOrigin'] = dimY[0][0]
+            metaData['PhysicalSizeYUnit'] = dimY[2]
+            #metaData['PhysicalSizeZ'] = dimZ[0][1] - dimZ[0][0]
+            #metaData['PhysicalSizeZOrigin'] = dimZ[0][0]
+            #metaData['PhysicalSizeZUnit'] = dimZ[2]
+            
             metaData['shape'] = dataset0.shape
 
         except IndexError:

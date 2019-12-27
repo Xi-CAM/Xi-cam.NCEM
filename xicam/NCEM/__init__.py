@@ -37,7 +37,7 @@ class NCEMPlugin(GUIPlugin):
 
         #self.fourDview = TabView(self.headermodel, self.selectionmodel, widgets.FourDImageView, 'primary')
 
-        self.metadataview = MetadataView(self.headermodel, self.selectionmodel)
+        self.metadataview = MetadataView(self.headermodel, self.selectionmodel, excludedkeys=('uid','descriptor','data'))
 
         self.toolbar = widgets.NCEMToolbar(self.headermodel, self.selectionmodel)
 

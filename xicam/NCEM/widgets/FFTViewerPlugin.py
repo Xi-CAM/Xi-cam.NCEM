@@ -9,8 +9,6 @@ from xicam.gui.widgets.dynimageview import DynImageView
 from .NCEMViewerPlugin import NCEMViewerPlugin
 import pyqtgraph as pg
 
-from xicam.core import msg
-
 class DynImageView_patch(DynImageView):
     ''' Patch to connect keyboard presses in timeline
     to emit a signal. This will be added as a patch to
@@ -47,7 +45,11 @@ class FFTViewerPlugin(QWidgetPlugin):
         self.Rroi = pg.RectROI(pos=(0, 0), size = (1,1))
         Rview = self.Rimageview.view.vb  # type: pg.ViewBox
         Rview.addItem(self.Rroi)
-
+        
+        # Hide the menu and roi buttons in the FFT view
+        self.Fimageview.ui.menuBtn.setParent(None)
+        self.Fimageview.ui.roiBtn.setParent(None)
+        
         # Wireup signals
         self.Rroi.sigRegionChanged.connect(self.updateFFT)
         self.Rimageview.sigTimeChanged.connect(
@@ -68,7 +70,7 @@ class FFTViewerPlugin(QWidgetPlugin):
             scale0 = (1, 1)
             units0 = ('','')
             msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
-        msg.logMessage('FFTviewPlugin: pixel size = {}'.format(scale0))
+        #msg.logMessage('FFTviewPlugin: pixel size = {}'.format(scale0))
         self.Rroi.setPos((0,0))
         self.Rroi.setSize((scale0[0] * 50, scale0[1] * 50))
         self.Rimageview.autoRange()
