@@ -21,6 +21,8 @@ class DynImageView_patch(DynImageView):
 
 class FFTViewerPlugin(QWidgetPlugin):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
+        if 'stream' in kwargs:
+            del kwargs['stream']
         super(FFTViewerPlugin, self).__init__(*args, **kwargs)
 
         # Two Dynamic image views (maybe only need 1 for the main data. The FFT can be an ImageView()
