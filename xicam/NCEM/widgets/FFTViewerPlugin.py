@@ -20,9 +20,8 @@ class DynImageView_patch(DynImageView):
         self.sigTimeChanged.emit(ind, time)
 
 class FFTViewerPlugin(QWidgetPlugin):
-    def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
-        if 'stream' in kwargs:
-            del kwargs['stream']
+    def __init__(self, header: NonDBHeader = None, field: str = 'primary', stream: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
+        
         super(FFTViewerPlugin, self).__init__(*args, **kwargs)
 
         # Two Dynamic image views (maybe only need 1 for the main data. The FFT can be an ImageView()

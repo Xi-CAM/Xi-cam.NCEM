@@ -11,7 +11,7 @@ from xicam.core import msg
 from xicam.gui.widgets.dynimageview import DynImageView
 
 class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
-    def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
+    def __init__(self, header: NonDBHeader = None, field: str = 'primary', stream: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
 
         # Add axes
         self.axesItem = PlotItem()
