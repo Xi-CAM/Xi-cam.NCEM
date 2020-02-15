@@ -101,7 +101,7 @@ class FFTViewerPlugin(QWidgetPlugin):
             dataSlice = data[int(y/scale0[1]):int((y+h)/scale0[1]),int(x/scale0[0]):int((x+w)/scale0[0])]
             
             fft = np.fft.fft2(dataSlice)
-            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1), autoLevels = self.autoLevels)
+            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1))#, autoLevels = self.autoLevels)
             self.autoLevels = False
             self.Rroi.setPen(pg.mkPen('w'))
         except ValueError:
