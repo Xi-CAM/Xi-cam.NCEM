@@ -65,13 +65,8 @@ class TIFPlugin(DataHandlerPlugin):
     def num_t(path):
         ''' Number of Tif pages
         '''
-        data = tifffile.imread(path)
-        
-        if data.ndim == 3:
-            num_t = data.shape[0]
-        elif data.ndim == 2:
-            num_t = 1
-        
+        data = tifffile.TiffFile(path)
+        num_t = len(data.pages)
         
         return num_t
 
