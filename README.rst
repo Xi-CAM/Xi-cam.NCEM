@@ -30,14 +30,14 @@ Installation
 Here are a set of steps to install this program using git, conda, and pip on Windows. Installation is only supported using source code available at the Camera Github Repositories
 
 Clone the following repositories from synchrotrons on github
-    git clone git@github.com:synchrotrons/Xi-cam.gui.git
-    
-    git clone git@github.com:synchrotrons/Xi-cam.plugins.git
-    
-    git clone git@github.com:synchrotrons/Xi-cam.core.git
+    git clone https://github.com/Xi-CAM/Xi-cam.core.git
 
-    git clone git@github.com:synchrotrons/Xi-cam.git
-
+    git clone https://github.com/Xi-CAM/Xi-cam.gui.git
+    
+    git clone https://github.com/Xi-CAM/Xi-cam.plugins.git
+    
+    git clone https://github.com/Xi-CAM/Xi-cam.git
+    
 Either get the stable NCEM plugin from synchrotons
 	git clone git@github.com:synchrotrons/Xi-cam.NCEM.git
 
