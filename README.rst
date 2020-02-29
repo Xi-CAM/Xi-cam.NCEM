@@ -39,10 +39,10 @@ Clone the following repositories from synchrotrons on github
     git clone https://github.com/Xi-CAM/Xi-cam.git
     
 Either get the stable NCEM plugin from synchrotons
-	git clone git@github.com:synchrotrons/Xi-cam.NCEM.git
+	git clone https://github.com/Xi-CAM/Xi-cam.NCEM.git
 
 OR the development version from Ercius
-    git clone git@github.com:ercius/Xi-cam.NCEM.git
+    git clone https://github.com/ercius/Xi-cam.NCEM.git
 
 Create and activate a new conda environment. Some dependencies are installed by pip.
     conda create --name xicam2 python=3.7 numpy scipy dask jupyter h5py pyqtgraph matplotlib netcdf4 xarray requests astropy numcodecs
