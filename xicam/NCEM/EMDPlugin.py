@@ -27,8 +27,9 @@ from numpy import ndarray as ndarray
 from ncempy.io import emd #EMD BErkeley datasets
 from ncempy.io import emdVelox #EMD Velox datasets
 
-import h5py #for EMD Velox data sets
-import h5py_cache #for EMD velox files to improve reading performance
+import h5py # for EMD Velox data sets
+import h5py_cache # for EMD velox files to improve reading performance
+
 
 class EMDPlugin(DataHandlerPlugin):
     name = 'EMDPlugin'
@@ -41,7 +42,7 @@ class EMDPlugin(DataHandlerPlugin):
         im1 = None
         if not self.veloxFlag:
             #Berkeley EMD
-            dataset0 = self.emd1.list_emds[dsetNum]['data'] #get the dataset in the first group found
+            dataset0 = self.emd1.list_emds[dsetNum]['data'] # get the dataset in the first group found
             if dataset0.ndim == 2:
                 im1 = dataset0
             elif dataset0.ndim == 3:
@@ -49,7 +50,7 @@ class EMDPlugin(DataHandlerPlugin):
             elif dataset0.ndim == 4:
                 im1 = dataset0[index_t,0,:,:]
         else:
-            #Velox EMD
+            # Velox EMD
             dataset0 = self.emd1.list_data[dsetNum]['Data']
             if dataset0.ndim == 2:
                 im1 = dataset0
@@ -63,17 +64,17 @@ class EMDPlugin(DataHandlerPlugin):
         self.path = path
 
         self.veloxFlag = False
-        #First try to open as EMD Berkeley file
+        # First try to open as EMD Berkeley file
         try:
             self.emd1 = emd.fileEMD(path,readonly=True)
-            dataset0 = self.emd1.list_emds[0]['data'] #get the dataset in the first group found
+            dataset0 = self.emd1.list_emds[0]['data'] # get the dataset in the first group found
         except IndexError:
             msg.logMessage('EMD: No emd_dataset tags detected.')
             self.veloxFlag = True
         except:
             raise
 
-        #Open as Velox EMD file. Only supports 1 data set currently
+        # Open as Velox EMD file. Only supports 1 data set currently
         if self.veloxFlag:
             try:
                 self.emd1 = emdVelox.fileEMDVelox(path)
