@@ -10,8 +10,13 @@ from qtpy.QtGui import *
 from xicam.core import msg
 from xicam.gui.widgets.dynimageview import DynImageView
 
+
 class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
-    def __init__(self, header: NonDBHeader = None, field: str = 'primary', stream: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
+    def __init__(self, header: NonDBHeader = None, field: str = 'primary', stream: str = 'primary',
+                 toolbar: QToolBar = None, *args, **kwargs):
+
+        self.header = None
+        self.field = None
 
         # Add axes
         self.axesItem = PlotItem()
@@ -43,7 +48,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         # self.resetLUTBtn.setObjectName("resetLUTBtn")
         self.ui.gridLayout.addWidget(self.resetLUTBtn, 3, 1, 1, 1)
         self.resetLUTBtn.clicked.connect(self.autoLevels)
-        
+
         # Export button
         self.exportBtn = QPushButton('Export')
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -52,7 +57,7 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         sizePolicy.setHeightForWidth(self.exportBtn.sizePolicy().hasHeightForWidth())
         self.ui.gridLayout.addWidget(self.exportBtn, 4, 1, 1, 1)
         self.exportBtn.clicked.connect(self.export)
-        
+
         # Hide ROI button and the Menu button and rearrange
         self.ui.roiBtn.setParent(None)
         self.ui.menuBtn.setParent(None)
@@ -62,9 +67,10 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
         # Setup coordinates label
         #self.coordinatesLbl = QLabel('--COORDINATES WILL GO HERE--')
         #self.ui.gridLayout.addWidget(self.coordinatesLbl, 3, 0, 1, 1, alignment=Qt.AlignHCenter)
-        
+
         # Set header
-        if header: self.setHeader(header, field)
+        if header:
+            self.setHeader(header, field)
 
     def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
         self.header = header
@@ -75,10 +81,10 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
             data = header.meta_array(field)
         except IndexError:
             msg.logMessage(f'Header object contained no frames with field {field}.', msg.ERROR)
-        
+
         if data:
             if data.ndim > 1:
-                #NOTE PAE: for setImage:
+                # NOTE PAE: for setImage:
                 #   use setImage(xVals=timeVals) to set the values on the slider for 3D data
                 try:
                     # Retrieve the metadata for pixel scale and units
@@ -89,24 +95,23 @@ class NCEMViewerPlugin(DynImageView, QWidgetPlugin):
                     scale0 = (1, 1)
                     units0 = ('', '')
                     msg.logMessage('NCEMviewer: No pixel size or units detected')
-                    
+
                 super(NCEMViewerPlugin, self).setImage(img=data, scale=scale0, *args, **kwargs)
-                
+
                 self.axesItem.setLabel('bottom', text='X', units=units0[0])
                 self.axesItem.setLabel('left', text='Y', units=units0[1])
-    
+
     def export(self):
         from tifffile import imsave
 
-        #outName = self.fileSaveDialog(filter=["*.tif"])
         dlg = FileDialog()
         outName = dlg.getSaveFileName(filter='tif')
         msg.logMessage(outName)
-        
+
         md = self.header.descriptordocs[0]
         scale0 = (float(md['PhysicalSizeX']), float(md['PhysicalSizeY']))
         msg.logMessage('meta data = {}'.format(type(scale0[0])))
-        
+
         image = self.header.meta_array('primary')
         msg.logMessage('image type = {}'.format(type(image)))
-        imsave('.'.join(outName),image,imagej=True,resolution=scale0, metadata={'unit':'nm'})
+        imsave('.'.join(outName),image,imagej=True,resolution=scale0, metadata={'unit': 'nm'})

@@ -12,12 +12,13 @@ import numpy as np
 from ncempy.io import dm
 from pathlib import Path
 
+
 class FourDImageView(QWidgetPlugin,QWidget):
     def __init__(self, header: NonDBHeader = None, field: str = 'primary', toolbar: QToolBar = None, *args, **kwargs):
         
         super(FourDImageView, self).__init__(*args, *kwargs)
                 
-        #Using DynImageView rotates the data and the ROI does not work correctly.
+        # Using DynImageView rotates the data and the ROI does not work correctly.
         self.DPimageview = DynImageView()
         self.RSimageview = DynImageView()
         # Keep Y-axis as is
@@ -44,11 +45,11 @@ class FourDImageView(QWidgetPlugin,QWidget):
         if header: self.setHeader(header, field)
         
     def setData(self, data):
-        '''Set the data and the limits of the ROIs
-        
-        '''
+        """ Set the data and the limits of the ROIs
+
+        """
         self.data = data
-        
+
         self.DPlimit = QRectF(0,0,data.shape[2],data.shape[3])
         self.RSlimit = QRectF(0,0,data.shape[0],data.shape[1])
 
@@ -59,17 +60,17 @@ class FourDImageView(QWidgetPlugin,QWidget):
         self.updateDP()
 
     def updateRS(self):
-        '''Update the diffraction space image based on the Real space
+        """ Update the diffraction space image based on the Real space
         ROI location and size
-        
-        '''
-        self.RSimageview.setImage(np.log(np.sum(self.data[:, :,int(self.DProi.pos().x()):int(self.DProi.pos().x() + self.DProi.size().x()),int(self.DProi.pos().y()):int(self.DProi.pos().y() + self.DProi.size().y())], axis=(3, 2),dtype=np.float32) + 1))
+
+        """
+        self.RSimageview.setImage(np.log(np.sum(self.data[:, :, int(self.DProi.pos().x()):int(self.DProi.pos().x() + self.DProi.size().x()),int(self.DProi.pos().y()):int(self.DProi.pos().y() + self.DProi.size().y())], axis=(3, 2),dtype=np.float32) + 1))
     
     def updateDP(self):
-        '''Update the real space image based on the diffraction space
+        """ Update the real space image based on the diffraction space
         ROI location and size.
-        
-        '''
+
+        """
         self.DPimageview.setImage(np.sum(self.data[int(self.RSroi.pos().x()):int(self.RSroi.pos().x() + self.RSroi.size().x()),int(self.RSroi.pos().y()):int(self.RSroi.pos().y() + self.RSroi.size().y()), :, :], axis=(1, 0),dtype=np.float32))
     
     def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
@@ -88,12 +89,12 @@ class FourDImageView(QWidgetPlugin,QWidget):
             self.setData(data2)
     
     def tempGetData(self,*args,**kwargs):
-        #Try to load the data
+        # Try to load the data
         dPath = Path(r'C:/Users/Peter.000/Data/Te NP 4D-STEM')
         fPath = Path('07_45x8 ss=5nm_spot11_CL=100 0p1s_alpha=4p63mrad_bin=4_300kV.dm4')
         
-        #get the filename from the header.
-        msg.logMessage('NCEM: File path = {}'.format(self.header.startdoc.get('sample_name', '????'))) #This only prints the file name. Not the full path.
+        # Get the filename from the header.
+        msg.logMessage('NCEM: File path = {}'.format(self.header.startdoc.get('sample_name', '????')))  # This only prints the file name. Not the full path.
         
         with dm.fileDM((dPath / fPath).as_posix()) as dm1:
             try:
@@ -105,6 +106,7 @@ class FourDImageView(QWidgetPlugin,QWidget):
 
                 data = im1['data'].reshape([scanJ,scanI,numkJ,numkI])
             except:
-                raise
                 print('Data is not a 4D DM3 or DM4 stack.')
+                raise
+
         return data
