@@ -3,4 +3,4 @@ from .fourdimageview import FourDImageView
 from .NCEMToolbar import NCEMToolbar
 from .NCEMViewerPlugin import NCEMViewerPlugin
 
-__all__ = ['FFTViewerPlugin', 'FourDImageView', 'NCEMToolbar', 'NCEMViewerPlugin']
+__all__ = ['FFTViewerPlugin', 'NCEMToolbar', 'NCEMViewerPlugin']
