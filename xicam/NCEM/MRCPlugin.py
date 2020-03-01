@@ -2,25 +2,19 @@ from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descri
     embedded_local_event_doc
 
 import os
-#import uuid
 import functools
-#from pathlib import Path
-from xicam.core import msg
 from ncempy.io import mrc
 
 
 class MRCPlugin(DataHandlerPlugin):
     name = 'MRCPlugin'
 
-    DEFAULT_EXTENTIONS = ['.mrc', '.rec', '.ali','.st']
+    DEFAULT_EXTENTIONS = ['.mrc', '.rec', '.ali', '.st']
 
     descriptor_keys = ['object_keys']
 
     def __call__(self, index_z, index_t):
         im1 = self.mrc.getSlice(index_t)
-        #for ii in range(1,5):
-        #    im = self.mrc.getSlice(index_t+ii)
-        #    im1 += im
         return im1
 
     def __init__(self, path):
@@ -31,11 +25,8 @@ class MRCPlugin(DataHandlerPlugin):
 
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
-        
+
         for path in paths:
-            # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
-            # cls().metadata is not part of spec, but implemented here as a special case
-            metadata = cls.metadata(path)
 
             num_t = cls.num_t(path)
             num_z = 1
@@ -47,18 +38,18 @@ class MRCPlugin(DataHandlerPlugin):
 
     @staticmethod
     def num_z(path):
-        '''MRC files can only be 3D. Use num_t for 3D files.
-        
+        """ MRC files can only be 3D. Use num_t for 3D files.
+
         Returns 1 always
-        '''
+        """
 
         return 1
 
     @staticmethod
     def num_t(path):
-        '''The number of slices in the first dimension (C-ordering)
-        
-        '''
+        """ The number of slices in the first dimension (C-ordering)
+
+        """
         with mrc.fileMRC(path) as mrc1:
             out = mrc1.dataSize[0]
 
@@ -74,16 +65,16 @@ class MRCPlugin(DataHandlerPlugin):
                 # add in the special FEIinfo if it exists
                 metaData.update(mrc1.FEIinfo)
 
-            #Store the X and Y pixel size, offset and unit
-            metaData['PhysicalSizeX'] = mrc1.voxelSize[2]*1e-10 #change Angstroms to meters
+            # Store the X and Y pixel size, offset and unit
+            metaData['PhysicalSizeX'] = mrc1.voxelSize[2] * 1e-10  # change Angstroms to meters
             metaData['PhysicalSizeXOrigin'] = 0
             metaData['PhysicalSizeXUnit'] = 'm'
-            metaData['PhysicalSizeY'] = mrc1.voxelSize[1]*1e-10 #change Angstroms to meters
+            metaData['PhysicalSizeY'] = mrc1.voxelSize[1] * 1e-10  # change Angstroms to meters
             metaData['PhysicalSizeYOrigin'] = 0
             metaData['PhysicalSizeYUnit'] = 'm'
-            
+
             metaData['FileName'] = path
-            
+
         return metaData
 
     @classmethod
@@ -106,17 +97,17 @@ class MRCPlugin(DataHandlerPlugin):
 
         with mrc.fileMRC(path) as mrc1:
             pass
-        metaData = mrc1.dataOut #meata data information from the mrc header
+        metaData = mrc1.dataOut  # meta data information from the mrc header
 
         # TODO: The lines below would be better to go in parseTXTFile.
         rawtltName = os.path.splitext(path)[0] + '.rawtlt'
         if os.path.isfile(rawtltName):
-            with open(rawtltName,'r') as f1:
-                tilts = map(float,f1)
+            with open(rawtltName, 'r') as f1:
+                tilts = map(float, f1)
             metaData['tilt angles'] = tilts
         FEIparameters = os.path.splitext(path)[0] + '.txt'
         if os.path.isfile(FEIparameters):
-            with open(FEIparameters,'r') as f2:
+            with open(FEIparameters, 'r') as f2:
                 lines = f2.readlines()
             pp1 = list([ii[18:].strip().split(':')] for ii in lines[3:-1])
             pp2 = {}
@@ -124,8 +115,7 @@ class MRCPlugin(DataHandlerPlugin):
                 try:
                     pp2[ll[0]] = float(ll[1])
                 except:
-                    pass #skip lines with no data
+                    pass  # skip lines with no data
             metaData.update(pp2)
-        
-        
+
         return metaData

@@ -1,18 +1,14 @@
 from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
     embedded_local_event_doc
 
-import os
-#import uuid
-#import re
 import functools
-#from pathlib import Path
 import tifffile
-from xicam.core import msg
+
 
 class TIFPlugin(DataHandlerPlugin):
-    '''single and multi-tiff files
-    
-    '''
+    """ Loads single page (2D) and multi-page (3D) Tif files
+
+    """
 
     name = 'TIFPlugin'
 
@@ -40,7 +36,7 @@ class TIFPlugin(DataHandlerPlugin):
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
 
-            # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
+            # Grab the metadata by temporarily instantiating the class and retrieving the metadata.
             # cls().metadata is not part of spec, but implemented here as a special case
             metadata = cls.parseDataFile(path)
 
@@ -57,14 +53,14 @@ class TIFPlugin(DataHandlerPlugin):
 
     @staticmethod
     def num_z(path):
-        '''Only 3D Tiff files
-        '''
+        """ Only 3D Tiff files
+        """
         return 1
 
     @staticmethod
     def num_t(path):
-        ''' Number of Tif pages
-        '''
+        """ Number of Tif pages
+        """
         data = tifffile.TiffFile(path)
         num_t = len(data.pages)
         
@@ -74,9 +70,9 @@ class TIFPlugin(DataHandlerPlugin):
     def parseDataFile(cls, path):
         metaData = {}
         
-        #Store the X and Y pixel size, offset and unit
+        # Store the X and Y pixel size, offset and unit
         metaData['PhysicalSizeX'] = 1
-        metaData['PhysicalSizeXOrigin'] =  0
+        metaData['PhysicalSizeXOrigin'] = 0
         metaData['PhysicalSizeXUnit'] = ''
         metaData['PhysicalSizeY'] = 1
         metaData['PhysicalSizeYOrigin'] = 0

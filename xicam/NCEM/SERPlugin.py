@@ -2,17 +2,14 @@ from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descri
     embedded_local_event_doc
 
 import os
-#import uuid
-#import re
 import functools
-#from pathlib import Path
 from ncempy.io import ser
-from xicam.core import msg
+
 
 class SERPlugin(DataHandlerPlugin):
-    '''SER files that contain spectra are currently not supported.
-    
-    '''
+    """ SER files that contain spectra are currently not supported.
+
+    """
 
     name = 'SERPlugin'
 
@@ -34,7 +31,7 @@ class SERPlugin(DataHandlerPlugin):
     def getEventDocs(cls, paths, descriptor_uid):
         for path in paths:
 
-            # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
+            # Grab the metadata by temporarily instantiating the class and retrieving the metadata.
             # cls().metadata is not part of spec, but implemented here as a special case
             metadata = cls.metadata(path)
 
@@ -53,13 +50,13 @@ class SERPlugin(DataHandlerPlugin):
 
     @staticmethod
     def num_z(metadata):
-        '''Ser files can only by 3D in nature
-        '''
+        """ Ser files can only by 3D in nature
+        """
         return 1
 
     @staticmethod
     def num_t(metadata):
-        '''The number of data sets in the ser file. SER files are always laid out as a 'series'
+        """ The number of data sets in the ser file. SER files are always laid out as a 'series'
         of 1D or 2D datasets. Thus, you need to retrieve each data set in the series separately.
 
         2D data sets:
@@ -70,7 +67,7 @@ class SERPlugin(DataHandlerPlugin):
         in a 1D or 2D raster.
 
         Note: Each data set can have a different X-Y size. Its rare but possible.
-        '''
+        """
 
         if metadata['DataTypeID'] == 16674:
             # 2D data sets (images)
@@ -85,7 +82,7 @@ class SERPlugin(DataHandlerPlugin):
     def parseDataFile(cls, path):
         metaData = cls.metadata(path)
 
-        #Store the X and Y pixel size, offset and unit
+        # Store the X and Y pixel size, offset and unit
         metaData['PhysicalSizeX'] = metaData['Calibration'][0]['CalibrationDelta']
         metaData['PhysicalSizeXOrigin'] = metaData['Calibration'][0]['CalibrationOffset']
         metaData['PhysicalSizeXUnit'] = 'm' #always meters
@@ -115,17 +112,15 @@ class SERPlugin(DataHandlerPlugin):
     @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
         with ser.fileSER(path,emifile=False) as ser1:
-            data, metaData = ser1.getDataset(0) #have to get 1 image and its meta data
+            data, metaData = ser1.getDataset(0)  # have to get 1 image and its meta data
             
-            #Get extra meta data from the EMI file if it exists
-            #if ser1._emi:
-            #    metaData.update(ser1._emi)
+            # Get extra meta data from the EMI file if it exists
             emifile = path[:-6] + '.emi'
             if os.path.exists(emifile):
                 _emi = ser1.read_emi(emifile)
                 metaData.update(_emi)
         
-        metaData.update(ser1.head) # some header data for the ser file
+        metaData.update(ser1.head)  # some header data for the ser file
         
         # Clean the dictionary
         for k, v in metaData.items():

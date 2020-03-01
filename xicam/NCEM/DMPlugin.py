@@ -5,10 +5,7 @@ from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descri
 from xicam.core import msg
 
 from ncempy.io import dm
-## For testing locally with ncempy development code
-#import sys
-#sys.path.append(r'C:\Users\Peter.000\Documents\scripting\openNCEMgh\ncempy\io')
-#import dm
+
 
 class DMPlugin(DataHandlerPlugin):
     name = 'DMPlugin'
@@ -16,7 +13,6 @@ class DMPlugin(DataHandlerPlugin):
     DEFAULT_EXTENTIONS = ['.dm3', '.dm4']
 
     descriptor_keys = ['object_keys']
-
 
     def __call__(self, index_z, index_t):
         im1 = self.dm0.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
@@ -26,7 +22,7 @@ class DMPlugin(DataHandlerPlugin):
         super(DMPlugin, self).__init__()
         self._metadata = None
         self.path = path
-        self.dm0 = dm.fileDM(self.path,on_memory = True)
+        self.dm0 = dm.fileDM(self.path, on_memory=True)
 
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):
@@ -44,13 +40,12 @@ class DMPlugin(DataHandlerPlugin):
 
     @staticmethod
     def num_z(path):
-        '''The number of slices along axis 1 (start at 0) (C-ordering)
+        """ The number of slices along axis 1 (start at 0) (C-ordering)
         for 4D data sets. Not used for 3D data sets
-        
-        
+
         Only used for 4D data sets
-        '''
-        with dm.fileDM(path,on_memory = True) as dm1:
+        """
+        with dm.fileDM(path, on_memory=True) as dm1:
             if dm1.thumbnail:
                 out = dm1.zSize2[1]
             else:
@@ -59,25 +54,25 @@ class DMPlugin(DataHandlerPlugin):
 
     @staticmethod
     def num_t(path):
-        '''The number of slices in the first dimension (C-ordering) for 3D
+        """ The number of slices in the first dimension (C-ordering) for 3D
         datasets
-        
+
         This is the number of slices along the "Z" axis. For a 3D volume
         this is is a slice long Z. For an image stack this is the requested
         image in the stack.
-        
-        '''
-        with dm.fileDM(path,on_memory = True) as dm1:
+
+        """
+        with dm.fileDM(path, on_memory=True) as dm1:
             if dm1.thumbnail:
                 out = dm1.zSize[1]
             else:
                 out = dm1.zSize[0]
         return out
-        
+
     @classmethod
     def parseDataFile(path):
         return cls.metadata(path)
-    
+
     @classmethod
     def getStartDoc(cls, paths, start_uid):
         return start_doc(start_uid=start_uid, metadata={'paths': paths})
@@ -96,10 +91,10 @@ class DMPlugin(DataHandlerPlugin):
     @functools.lru_cache(maxsize=10, typed=False)
     def metadata(path):
         metaData = {}
-        with dm.fileDM(path,on_memory = True) as dm1:
+        with dm.fileDM(path, on_memory=True) as dm1:
             # Save most useful metaData
-            
-            #Only keep the most useful tags as meta data
+
+            # Only keep the most useful tags as meta data
             for kk, ii in dm1.allTags.items():
                 # Most useful starting tags
                 prefix1 = 'ImageList.{}.ImageTags.'.format(dm1.numObjects)
@@ -129,15 +124,15 @@ class DMPlugin(DataHandlerPlugin):
                         del metaData[jj]
                     elif jj.find('Device.Parameters') > -1:
                         del metaData[jj]
-        
-            #Store the X and Y pixel size, offset and unit
+
+            # Store the X and Y pixel size, offset and unit
             metaData['PhysicalSizeX'] = metaData['Calibrations.Dimension.1.Scale']
             metaData['PhysicalSizeXOrigin'] = metaData['Calibrations.Dimension.1.Origin']
             metaData['PhysicalSizeXUnit'] = metaData['Calibrations.Dimension.1.Units']
             metaData['PhysicalSizeY'] = metaData['Calibrations.Dimension.2.Scale']
             metaData['PhysicalSizeYOrigin'] = metaData['Calibrations.Dimension.2.Origin']
             metaData['PhysicalSizeYUnit'] = metaData['Calibrations.Dimension.2.Units']
-            
+
             metaData['FileName'] = path
 
         return metaData
