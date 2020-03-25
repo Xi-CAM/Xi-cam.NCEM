@@ -1,12 +1,10 @@
 import functools
 import event_model
 from pathlib import Path
-import itertools
 import time
 import mimetypes
 import dask
 import dask.array as da
-import numpy as np
 
 from ncempy.io import dm
 
@@ -47,20 +45,6 @@ def _num_t(dm_obj):
 
 def get_slice(dm_obj, z, t):
     return dm_obj.getSlice(0, z, t)['data']
-
-
-# def _get_start_doc(cls, paths, start_uid):
-#     return start_doc(start_uid=start_uid, metadata={'paths': paths})
-#
-#
-# def _get_descriptor_doc(cls, paths, start_uid, descriptor_uid):
-#     md = cls.parseTXTFile(paths[0])
-#     md.update(cls.metadata(paths[0]))
-#     md.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
-#
-#     # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
-#     # md = dict([(key, md.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
-#     yield descriptor_doc(start_uid, descriptor_uid, metadata=md)
 
 
 @functools.lru_cache(maxsize=10, typed=False)
@@ -134,12 +118,6 @@ def ingest_NCEM_DM(paths):
                            for z in range(num_z)]
                           for t in range(num_t)])
 
-    # delayed_reader = dask.delayed(handler_NCEM_DM, pure=True)
-    # delayed_data = delayed_reader(path=path)
-    # dtype = delayed_data.dtype.compute()
-    # shape = delayed_data.shape.compute()
-    # dask_data = da.from_delayed(delayed_data, dtype=dtype, shape=shape)
-
     # Compose descriptor
     source = 'NCEM'
     frame_data_keys = {'raw': {'source': source,
@@ -152,6 +130,7 @@ def ingest_NCEM_DM(paths):
                                                         )
     yield 'descriptor', frame_stream_bundle.descriptor_doc
 
+    # NOTE: Resource document may be meaningful in the future. For transient access it is not useful
     # # Compose resource
     # resource = run_bundle.compose_resource(root=Path(path).root, resource_path=path, spec='NCEM_DM', resource_kwargs={})
     # yield 'resource', resource.resource_doc
