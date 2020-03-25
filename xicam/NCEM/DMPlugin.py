@@ -1,138 +1,172 @@
 import functools
-
-from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
-    embedded_local_event_doc
-from xicam.core import msg
+import event_model
+from pathlib import Path
+import itertools
+import time
+import mimetypes
+import dask
+import dask.array as da
+import numpy as np
 
 from ncempy.io import dm
 
+mimetypes.add_type('application/x-DM', '.dm3')
+mimetypes.add_type('application/x-DM', '.dm4')
 
-class DMPlugin(DataHandlerPlugin):
-    name = 'DMPlugin'
 
-    DEFAULT_EXTENTIONS = ['.dm3', '.dm4']
+def _num_z(dm_obj):
+    """ The number of slices along axis 1 (start at 0) (C-ordering)
+    for 4D data sets. Not used for 3D data sets
 
-    descriptor_keys = ['object_keys']
+    Only used for 4D data sets
+    """
 
-    def __call__(self, index_z, index_t):
-        im1 = self.dm0.getSlice(0, index_t, sliceZ2=index_z)  # Most DM files have only 1 dataset
-        return im1['data']
+    if dm_obj.thumbnail:
+        out = dm_obj.zSize2[1]
+    else:
+        out = dm_obj.zSize2[0]
+    return int(out)
 
-    def __init__(self, path):
-        super(DMPlugin, self).__init__()
-        self._metadata = None
-        self.path = path
-        self.dm0 = dm.fileDM(self.path, on_memory=True)
 
-    @classmethod
-    def getEventDocs(cls, paths, descriptor_uid):
-        for path in paths:
-            # Grab the metadata by temporarily instanciating the class and retrieving the metadata.
-            # cls().metadata is not part of spec, but implemented here as a special case
-            metadata = cls.metadata(path)
+def _num_t(dm_obj):
+    """ The number of slices in the first dimension (C-ordering) for 3D
+    datasets
 
-            num_z = cls.num_z(path)
-            num_t = cls.num_t(path)
-            for index_z in range(num_z):
-                for index_t in range(num_t):
-                    yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path,),
-                                                   {'index_z': index_z, 'index_t': index_t})
+    This is the number of slices along the "Z" axis. For a 3D volume
+    this is is a slice long Z. For an image stack this is the requested
+    image in the stack.
 
-    @staticmethod
-    def num_z(path):
-        """ The number of slices along axis 1 (start at 0) (C-ordering)
-        for 4D data sets. Not used for 3D data sets
+    """
 
-        Only used for 4D data sets
-        """
-        with dm.fileDM(path, on_memory=True) as dm1:
-            if dm1.thumbnail:
-                out = dm1.zSize2[1]
-            else:
-                out = dm1.zSize2[0]
-        return out
+    if dm_obj.thumbnail:
+        out = dm_obj.zSize[1]
+    else:
+        out = dm_obj.zSize[0]
+    return int(out)
 
-    @staticmethod
-    def num_t(path):
-        """ The number of slices in the first dimension (C-ordering) for 3D
-        datasets
 
-        This is the number of slices along the "Z" axis. For a 3D volume
-        this is is a slice long Z. For an image stack this is the requested
-        image in the stack.
+def get_slice(dm_obj, z, t):
+    return dm_obj.getSlice(0, z, t)['data']
 
-        """
-        with dm.fileDM(path, on_memory=True) as dm1:
-            if dm1.thumbnail:
-                out = dm1.zSize[1]
-            else:
-                out = dm1.zSize[0]
-        return out
 
-    @classmethod
-    def parseDataFile(path):
-        return cls.metadata(path)
+# def _get_start_doc(cls, paths, start_uid):
+#     return start_doc(start_uid=start_uid, metadata={'paths': paths})
+#
+#
+# def _get_descriptor_doc(cls, paths, start_uid, descriptor_uid):
+#     md = cls.parseTXTFile(paths[0])
+#     md.update(cls.metadata(paths[0]))
+#     md.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
+#
+#     # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
+#     # md = dict([(key, md.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
+#     yield descriptor_doc(start_uid, descriptor_uid, metadata=md)
 
-    @classmethod
-    def getStartDoc(cls, paths, start_uid):
-        return start_doc(start_uid=start_uid, metadata={'paths': paths})
 
-    @classmethod
-    def getDescriptorDocs(cls, paths, start_uid, descriptor_uid):
-        md = cls.parseTXTFile(paths[0])
-        md.update(cls.metadata(paths[0]))
-        md.update({'object_keys': {'Unknown Device': ['Unknown Device']}})  # TODO: add device detection
+@functools.lru_cache(maxsize=10, typed=False)
+def _metadata(path):
+    metaData = {}
+    with dm.fileDM(path, on_memory=True) as dm1:
+        # Save most useful metaData
 
-        # TODO: Check with Peter if all keys should go in the descriptor, or if some should go in the events
-        # md = dict([(key, md.get(key, None)) for key in getattr(cls, 'descriptor_keys', [])])
-        yield descriptor_doc(start_uid, descriptor_uid, metadata=md)
+        # Only keep the most useful tags as meta data
+        for kk, ii in dm1.allTags.items():
+            # Most useful starting tags
+            prefix1 = 'ImageList.{}.ImageTags.'.format(dm1.numObjects)
+            prefix2 = 'ImageList.{}.ImageData.'.format(dm1.numObjects)
+            pos1 = kk.find(prefix1)
+            pos2 = kk.find(prefix2)
+            if pos1 > -1:
+                sub = kk[pos1 + len(prefix1):]
+                metaData[sub] = ii
+            elif pos2 > -1:
+                sub = kk[pos2 + len(prefix2):]
+                metaData[sub] = ii
 
-    @staticmethod
-    @functools.lru_cache(maxsize=10, typed=False)
-    def metadata(path):
-        metaData = {}
-        with dm.fileDM(path, on_memory=True) as dm1:
-            # Save most useful metaData
+            # Remove unneeded keys
+            for jj in list(metaData):
+                if jj.find('frame sequence') > -1:
+                    del metaData[jj]
+                elif jj.find('Private') > -1:
+                    del metaData[jj]
+                elif jj.find('Reference Images') > -1:
+                    del metaData[jj]
+                elif jj.find('Frame.Intensity') > -1:
+                    del metaData[jj]
+                elif jj.find('Area.Transform') > -1:
+                    del metaData[jj]
+                elif jj.find('Parameters.Objects') > -1:
+                    del metaData[jj]
+                elif jj.find('Device.Parameters') > -1:
+                    del metaData[jj]
 
-            # Only keep the most useful tags as meta data
-            for kk, ii in dm1.allTags.items():
-                # Most useful starting tags
-                prefix1 = 'ImageList.{}.ImageTags.'.format(dm1.numObjects)
-                prefix2 = 'ImageList.{}.ImageData.'.format(dm1.numObjects)
-                pos1 = kk.find(prefix1)
-                pos2 = kk.find(prefix2)
-                if pos1 > -1:
-                    sub = kk[pos1 + len(prefix1):]
-                    metaData[sub] = ii
-                elif pos2 > -1:
-                    sub = kk[pos2 + len(prefix2):]
-                    metaData[sub] = ii
+        # Store the X and Y pixel size, offset and unitdm_handle.getSlice
+        metaData['PhysicalSizeX'] = metaData['Calibrations.Dimension.1.Scale']
+        metaData['PhysicalSizeXOrigin'] = metaData['Calibrations.Dimension.1.Origin']
+        metaData['PhysicalSizeXUnit'] = metaData['Calibrations.Dimension.1.Units']
+        metaData['PhysicalSizeY'] = metaData['Calibrations.Dimension.2.Scale']
+        metaData['PhysicalSizeYOrigin'] = metaData['Calibrations.Dimension.2.Origin']
+        metaData['PhysicalSizeYUnit'] = metaData['Calibrations.Dimension.2.Units']
 
-                # Remove unneeded keys
-                for jj in list(metaData):
-                    if jj.find('frame sequence') > -1:
-                        del metaData[jj]
-                    elif jj.find('Private') > -1:
-                        del metaData[jj]
-                    elif jj.find('Reference Images') > -1:
-                        del metaData[jj]
-                    elif jj.find('Frame.Intensity') > -1:
-                        del metaData[jj]
-                    elif jj.find('Area.Transform') > -1:
-                        del metaData[jj]
-                    elif jj.find('Parameters.Objects') > -1:
-                        del metaData[jj]
-                    elif jj.find('Device.Parameters') > -1:
-                        del metaData[jj]
+        metaData['FileName'] = path
 
-            # Store the X and Y pixel size, offset and unit
-            metaData['PhysicalSizeX'] = metaData['Calibrations.Dimension.1.Scale']
-            metaData['PhysicalSizeXOrigin'] = metaData['Calibrations.Dimension.1.Origin']
-            metaData['PhysicalSizeXUnit'] = metaData['Calibrations.Dimension.1.Units']
-            metaData['PhysicalSizeY'] = metaData['Calibrations.Dimension.2.Scale']
-            metaData['PhysicalSizeYOrigin'] = metaData['Calibrations.Dimension.2.Origin']
-            metaData['PhysicalSizeYUnit'] = metaData['Calibrations.Dimension.2.Units']
+    return metaData
 
-            metaData['FileName'] = path
 
-        return metaData
+def ingest_NCEM_DM(paths):
+    assert len(paths) == 1
+    path = paths[0]
+
+    # Compose run start
+    run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle
+    start_doc = run_bundle.start_doc
+    start_doc["sample_name"] = Path(paths[0]).resolve().stem
+    yield 'start', start_doc
+
+    dm_handle = dm.fileDM(path, on_memory=True)
+    num_t = _num_t(dm_handle)
+    num_z = _num_z(dm_handle)
+    first_frame = dm_handle.getSlice(0, 0, sliceZ2=0)['data']  # Most DM files have only 1 dataset
+    shape = first_frame.shape
+    dtype = first_frame.dtype
+
+    dask_data = da.stack([[da.from_delayed(dask.delayed(get_slice)(dm_handle, t, z), shape=shape, dtype=dtype)
+                           for z in range(num_z)]
+                          for t in range(num_t)])
+
+    # delayed_reader = dask.delayed(handler_NCEM_DM, pure=True)
+    # delayed_data = delayed_reader(path=path)
+    # dtype = delayed_data.dtype.compute()
+    # shape = delayed_data.shape.compute()
+    # dask_data = da.from_delayed(delayed_data, dtype=dtype, shape=shape)
+
+    # Compose descriptor
+    source = 'NCEM'
+    frame_data_keys = {'raw': {'source': source,
+                               'dtype': 'number',
+                               'shape': shape}}
+    frame_stream_name = 'primary'
+    frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
+                                                        name=frame_stream_name,
+                                                        # configuration=_metadata(path)
+                                                        )
+    yield 'descriptor', frame_stream_bundle.descriptor_doc
+
+    # # Compose resource
+    # resource = run_bundle.compose_resource(root=Path(path).root, resource_path=path, spec='NCEM_DM', resource_kwargs={})
+    # yield 'resource', resource.resource_doc
+
+    # Compose datum_page
+    # z_indices, t_indices = zip(*itertools.product(z_indices, t_indices))
+    # datum_page_doc = resource.compose_datum_page(datum_kwargs={'index_z': list(z_indices), 'index_t': list(t_indices)})
+    # datum_ids = datum_page_doc['datum_id']
+    # yield 'datum_page', datum_page_doc
+
+    yield 'event', frame_stream_bundle.compose_event(data={'raw': dask_data},
+                                                     timestamps={'raw': time.time()})
+
+    yield 'stop', run_bundle.compose_stop()
+
+
+if __name__ == "__main__":
+    print(list(ingest_NCEM_DM(["/home/rp/data/NCEM/01_TimeSeriesImages_20images(1).dm3"])))

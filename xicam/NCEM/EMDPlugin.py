@@ -27,39 +27,16 @@ from numpy import ndarray as ndarray
 from ncempy.io import emd  # EMD Berkeley datasets
 from ncempy.io import emdVelox  # EMD Velox datasets
 
-#import h5py  # for EMD Velox data sets
-#import h5py_cache  # for EMD velox files to improve reading performance
 
 
-class EMDPlugin(DataHandlerPlugin):
-    name = 'EMDPlugin'
-
-    DEFAULT_EXTENTIONS = ['.emd']
-
-    descriptor_keys = ['object_keys']
-
-    def __call__(self, index_t, dsetNum=0):
-        im1 = None
-        if not self.veloxFlag:
-            # Berkeley EMD
-            dataset0 = self.emd1.list_emds[dsetNum]['data']  # get the dataset in the first group found
-            if dataset0.ndim == 2:
-                im1 = dataset0
-            elif dataset0.ndim == 3:
-                im1 = dataset0[index_t, :, :]
-            elif dataset0.ndim == 4:
-                im1 = dataset0[index_t, 0, :, :]
-        else:
-            # Velox EMD
-            dataset0 = self.emd1.list_data[dsetNum]['Data']
-            if dataset0.ndim == 2:
-                im1 = dataset0
-            elif dataset0.ndim == 3:
-                im1 = dataset0[:, :, index_t]
-        return im1
+class handler_NCEM_EMD():
+    # name = 'EMDPlugin'
+    #
+    # DEFAULT_EXTENTIONS = ['.emd']
+    #
+    # descriptor_keys = ['object_keys']
 
     def __init__(self, path):
-        super(EMDPlugin, self).__init__()
         self._metadata = None
         self.path = path
 
@@ -87,6 +64,26 @@ class EMDPlugin(DataHandlerPlugin):
                 raise
             except:
                 raise
+
+    def __call__(self, index_t, dsetNum=0):
+        im1 = None
+        if not self.veloxFlag:
+            # Berkeley EMD
+            dataset0 = self.emd1.list_emds[dsetNum]['data']  # get the dataset in the first group found
+            if dataset0.ndim == 2:
+                im1 = dataset0
+            elif dataset0.ndim == 3:
+                im1 = dataset0[index_t, :, :]
+            elif dataset0.ndim == 4:
+                im1 = dataset0[index_t, 0, :, :]
+        else:
+            # Velox EMD
+            dataset0 = self.emd1.list_data[dsetNum]['Data']
+            if dataset0.ndim == 2:
+                im1 = dataset0
+            elif dataset0.ndim == 3:
+                im1 = dataset0[:, :, index_t]
+        return im1
 
     @classmethod
     def getEventDocs(cls, paths, descriptor_uid):

@@ -3,10 +3,12 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 
+from databroker.core import BlueskyRun
+
 from xicam.core import msg
 from xicam.core.data import load_header, NonDBHeader
 
-from xicam.plugins import GUIPlugin, GUILayout, manager as pluginmanager
+from xicam.plugins import GUIPlugin, GUILayout
 import pyqtgraph as pg
 from functools import partial
 from xicam.gui.widgets.dynimageview import DynImageView
@@ -18,6 +20,8 @@ from xicam.gui.widgets.tabview import TabView
 from .patches import pyqtgraph_export
 from .patches import pyqtgraph_tiffexporter
 
+from . import DMPlugin  # Necessary unused import to register mimetype
+
 
 class NCEMPlugin(GUIPlugin):
     name = 'NCEM'
@@ -25,29 +29,45 @@ class NCEMPlugin(GUIPlugin):
 
     def __init__(self):
         # Data model
-        self.headermodel = QStandardItemModel()
+        self.catalogModel = QStandardItemModel()
 
         # Selection model
-        self.selectionmodel = QItemSelectionModel(self.headermodel)
+        self.selectionmodel = QItemSelectionModel(self.catalogModel)
 
         # Setup TabViews
-        self.rawview = TabView(self.headermodel, self.selectionmodel, widgets.NCEMViewerPlugin, 'primary')
+        self.rawview = TabView(self.catalogModel, self.selectionmodel, widgets.NCEMViewerPlugin, 'primary', field='raw')
 
-        self.fftview = TabView(self.headermodel, self.selectionmodel, widgets.FFTViewerPlugin, 'primary')
+        # self.fftview = TabView(self.catalogModel, self.selectionmodel, widgets.FFTViewerPlugin, 'primary')
 
         #self.fourDview = TabView(self.headermodel, self.selectionmodel, widgets.FourDImageView, 'primary')
 
-        self.metadataview = MetadataView(self.headermodel, self.selectionmodel, excludedkeys=('uid','descriptor','data'))
+        # self.metadataview = MetadataView(self.catalogModel, self.selectionmodel, excludedkeys=('uid','descriptor','data'))
 
-        self.toolbar = widgets.NCEMToolbar(self.headermodel, self.selectionmodel)
+        # self.toolbar = widgets.NCEMToolbar(self.catalogModel, self.selectionmodel)
 
         self.stages = {
-            'View': GUILayout(self.rawview, top=self.toolbar, right=self.metadataview),
-            #'View': GUILayout(self.rawview, top=self.toolbar),
-            #'4D STEM': GUILayout(self.fourDview, ),
-            'FFT View': GUILayout(self.fftview, )
+            'View': GUILayout(self.rawview, )  # top=self.toolbar, )#right=self.metadataview),
+            # 'View': GUILayout(self.rawview, top=self.toolbar),
+            # '4D STEM': GUILayout(self.fourDview, ),
+            # 'FFT View': GUILayout(self.fftview, )
         }
         super(NCEMPlugin, self).__init__()
+
+    def appendCatalog(self, catalog: BlueskyRun, *args, **kwargs):
+
+        displayName = ""
+        if 'sample_name' in catalog.metadata['start']:
+            displayName = catalog.metadata['start']['sample_name']
+        elif 'scan_id' in catalog.metadata['start']:
+            displayName = f"Scan: {catalog.metadata['start']['scan_id']}"
+        else:
+            displayName = f"UID: {catalog.metadata['start']['uid']}"
+
+        item = QStandardItem()
+        item.setData(displayName, Qt.DisplayRole)
+        item.setData(catalog, Qt.UserRole)
+        self.catalogModel.appendRow(item)
+        self.catalogModel.dataChanged.emit(item.index(), item.index())
 
     def appendHeader(self, header: NonDBHeader, **kwargs):
         item = QStandardItem(header.startdoc.get('sample_name', '????'))

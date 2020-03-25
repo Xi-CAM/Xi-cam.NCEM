@@ -95,7 +95,11 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    entry_points={},
+    entry_points={"intake.catalogs": ["application/x-DM = xicam.NCEM.DMPlugin:ingest_NCEM_DM"],
+                  "databroker.handlers": ["NCEM_DM = xicam.NCEM.DMPlugin:handler_NCEM_DM"],
+                  "xicam.plugins.GUIPlugin": ["NCEM = xicam.NCEM:NCEMPlugin"],
+                  "xicam.plugins.WidgetPlugin": ["ncem_viewer = xicam.NCEM.widgets.NCEMViewerPlugin:NCEMViewerPlugin"]
+                  },
 
     ext_modules=[],
     include_package_data=True
