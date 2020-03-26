@@ -122,7 +122,7 @@ def ingest_NCEM_DM(paths):
     source = 'NCEM'
     frame_data_keys = {'raw': {'source': source,
                                'dtype': 'number',
-                               'shape': shape}}
+                               'shape': (num_t, num_z, *shape)}}
     frame_stream_name = 'primary'
     frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
                                                         name=frame_stream_name,
