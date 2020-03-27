@@ -3,7 +3,19 @@ from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descri
 
 import os
 import functools
+import time
+import mimetypes
+import dask
+import dask.array as da
+from pathlib import Path
+
+import event_model
+
 from ncempy.io import mrc
+
+_extensions = ['.mrc', '.rec', '.ali', '.st']
+for extension in _extensions:
+    mimetypes.add_type('application/x-MRC', extension)
 
 
 class MRCPlugin(DataHandlerPlugin):
@@ -36,24 +48,17 @@ class MRCPlugin(DataHandlerPlugin):
                     yield embedded_local_event_doc(descriptor_uid, 'primary', cls, (path,),
                                                    {'index_z': index_z, 'index_t': index_t})
 
-    @staticmethod
-    def num_z(path):
-        """ MRC files can only be 3D. Use num_t for 3D files.
 
-        Returns 1 always
-        """
+def _num_t(mrc_obj):
+    """ The number of slices in the first dimension (C-ordering)
 
-        return 1
+    """
+    # TODO: Alert Peter Ercius that the type returned by dataSize[0] should be `int`
+    return int(mrc_obj.dataSize[0])
 
-    @staticmethod
-    def num_t(path):
-        """ The number of slices in the first dimension (C-ordering)
 
-        """
-        with mrc.fileMRC(path) as mrc1:
-            out = mrc1.dataSize[0]
-
-        return out
+def _get_slice(mrc_obj, t):
+    return mrc_obj.getSlice(t)
 
     @classmethod
     @functools.lru_cache(maxsize=10, typed=False)
@@ -119,3 +124,63 @@ class MRCPlugin(DataHandlerPlugin):
             metaData.update(pp2)
 
         return metaData
+
+
+def ingest_NCEM_MRC(paths):
+    assert len(paths) == 1
+    path = paths[0]
+
+    # Compose run start
+    run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle
+    start_doc = run_bundle.start_doc
+    start_doc["sample_name"] = Path(paths[0]).resolve().stem
+    yield 'start', start_doc
+
+    mrc_handle = mrc.fileMRC(path)
+    num_t = _num_t(mrc_handle)
+    first_frame = _get_slice(mrc_handle, 0)
+    shape = first_frame.shape
+    dtype = first_frame.dtype
+
+    delayed_get_slice = dask.delayed(_get_slice)
+    dask_data = da.stack([da.from_delayed(delayed_get_slice(mrc_handle, t), shape=shape, dtype=dtype)
+                          for t in range(num_t)])
+
+    # Compose descriptor
+    source = 'NCEM'
+    frame_data_keys = {'raw': {'source': source,
+                               'dtype': 'number',
+                               'shape': (num_t, *shape)}}
+    frame_stream_name = 'primary'
+    frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
+                                                        name=frame_stream_name,
+                                                        # configuration=_metadata(path)
+                                                        )
+    yield 'descriptor', frame_stream_bundle.descriptor_doc
+
+    # NOTE: Resource document may be meaningful in the future. For transient access it is not useful
+    # # Compose resource
+    # resource = run_bundle.compose_resource(root=Path(path).root, resource_path=path, spec='NCEM_DM', resource_kwargs={})
+    # yield 'resource', resource.resource_doc
+
+    # Compose datum_page
+    # z_indices, t_indices = zip(*itertools.product(z_indices, t_indices))
+    # datum_page_doc = resource.compose_datum_page(datum_kwargs={'index_z': list(z_indices), 'index_t': list(t_indices)})
+    # datum_ids = datum_page_doc['datum_id']
+    # yield 'datum_page', datum_page_doc
+
+    yield 'event', frame_stream_bundle.compose_event(data={'raw': dask_data},
+                                                     timestamps={'raw': time.time()})
+
+    yield 'stop', run_bundle.compose_stop()
+
+
+# TODO: this should not be necessary. Unfortunately `mimetypes` only allows a single match,
+#       and `.mrc` is already a registered extension. This is not a good way to solve the problem long-term.
+def mrc_sniffer(path, first_bytes):
+    if Path(path).suffix == '.mrc':
+        return 'application/x-MRC'
+
+
+if __name__ == "__main__":
+    print(list(ingest_NCEM_DM(["/home/rp/data/NCEM/Te_80k_L100mm_80Kx(1).mrc"])))
