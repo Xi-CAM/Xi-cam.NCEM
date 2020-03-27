@@ -114,7 +114,8 @@ def ingest_NCEM_DM(paths):
     shape = first_frame.shape
     dtype = first_frame.dtype
 
-    dask_data = da.stack([[da.from_delayed(dask.delayed(get_slice)(dm_handle, t, z), shape=shape, dtype=dtype)
+    delayed_get_slice = dask.delayed(get_slice)
+    dask_data = da.stack([[da.from_delayed(delayed_get_slice(dm_handle, t, z), shape=shape, dtype=dtype)
                            for z in range(num_z)]
                           for t in range(num_t)])
 

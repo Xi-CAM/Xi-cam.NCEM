@@ -101,7 +101,8 @@ setup(
                                       "application/x-MRC = xicam.NCEM.MRCPlugin:ingest_NCEM_MRC",
                                       "application/x-SER = xicam.NCEM.SERPlugin:ingest_NCEM_SER",
                                       "image/tif = xicam.NCEM.TIFPlugin:ingest_NCEM_TIF"],
-                  "databroker.sniffers": ['emd_sniffer = xicam.NCEM.EMDPlugin:emd_sniffer', ],
+                  "databroker.sniffers": ['emd_sniffer = xicam.NCEM.EMDPlugin:emd_sniffer',
+                                          'mrc_sniffer = xicam.NCEM.MRCPlugin:mrc_sniffer'],
                   "databroker.handlers": ["NCEM_DM = xicam.NCEM.DMPlugin:handler_NCEM_DM"],
                   "xicam.plugins.GUIPlugin": ["NCEM = xicam.NCEM:NCEMPlugin"],
                   "xicam.plugins.WidgetPlugin": ["ncem_viewer = xicam.NCEM.widgets.NCEMViewerPlugin:NCEMViewerPlugin"]
