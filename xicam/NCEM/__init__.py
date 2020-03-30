@@ -32,7 +32,7 @@ class NCEMPlugin(GUIPlugin):
         # Setup TabViews
         self.rawview = TabView(self.catalogModel, self.selectionmodel, widgets.NCEMViewerPlugin, 'primary', field='raw')
 
-        # self.fftview = TabView(self.catalogModel, self.selectionmodel, widgets.FFTViewerPlugin, 'primary')
+        self.fftview = TabView(self.catalogModel, self.selectionmodel, widgets.FFTViewerPlugin, 'primary', field='raw')
 
         #self.fourDview = TabView(self.headermodel, self.selectionmodel, widgets.FourDImageView, 'primary')
 
@@ -41,10 +41,10 @@ class NCEMPlugin(GUIPlugin):
         # self.toolbar = widgets.NCEMToolbar(self.catalogModel, self.selectionmodel)
 
         self.stages = {
-            'View': GUILayout(self.rawview, )  # top=self.toolbar, )#right=self.metadataview),
+            'View': GUILayout(self.rawview, ),  # top=self.toolbar, )#right=self.metadataview),
             # 'View': GUILayout(self.rawview, top=self.toolbar),
             # '4D STEM': GUILayout(self.fourDview, ),
-            # 'FFT View': GUILayout(self.fftview, )
+            'FFT View': GUILayout(self.fftview, )
         }
         super(NCEMPlugin, self).__init__()
 
@@ -63,9 +63,3 @@ class NCEMPlugin(GUIPlugin):
         item.setData(catalog, Qt.UserRole)
         self.catalogModel.appendRow(item)
         self.catalogModel.dataChanged.emit(item.index(), item.index())
-
-    def appendHeader(self, header: NonDBHeader, **kwargs):
-        item = QStandardItem(header.startdoc.get('sample_name', '????'))
-        item.header = header
-        self.headermodel.appendRow(item)
-        self.headermodel.dataChanged.emit(QModelIndex(), QModelIndex())

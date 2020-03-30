@@ -13,7 +13,7 @@ from xicam.gui.widgets.imageviewmixins import CatalogView
 
 
 class NCEMViewerPlugin(DynImageView, CatalogView, QWidgetPlugin):
-    def __init__(self, catalog, field: str = 'primary', stream: str = 'primary',
+    def __init__(self, catalog, stream: str = 'primary', field: str = 'raw',
                  toolbar: QToolBar = None, *args, **kwargs):
 
         self.header = None
@@ -70,7 +70,7 @@ class NCEMViewerPlugin(DynImageView, CatalogView, QWidgetPlugin):
         # self.ui.gridLayout.addWidget(self.coordinatesLbl, 3, 0, 1, 1, alignment=Qt.AlignHCenter)
 
         if catalog:
-            self.setCatalog(catalog, field=field, stream=stream)
+            self.setCatalog(catalog, stream=stream, field=field)
 
     # def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
     #     self.header = header
