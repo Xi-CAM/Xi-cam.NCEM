@@ -115,12 +115,5 @@ def ingest_NCEM_MRC(paths):
     yield 'stop', run_bundle.compose_stop()
 
 
-# TODO: this should not be necessary. Unfortunately `mimetypes` only allows a single match,
-#       and `.mrc` is already a registered extension. This is not a good way to solve the problem long-term.
-def mrc_sniffer(path, first_bytes):
-    if Path(path).suffix == '.mrc':
-        return 'application/x-MRC'
-
-
 if __name__ == "__main__":
     print(list(ingest_NCEM_MRC(["/home/rp/data/NCEM/Te_80k_L100mm_80Kx(1).mrc"])))
