@@ -1,5 +1,5 @@
 import pytest
-from xicam.NCEM.DMPlugin import ingest_NCEM_DM
+from xicam.NCEM.ingestors.DMPlugin import ingest_NCEM_DM
 
 
 # TODO: add fixture that writes temp data file with ncempy for tests

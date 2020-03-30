@@ -2,14 +2,10 @@ import functools
 import event_model
 from pathlib import Path
 import time
-import mimetypes
 import dask
 import dask.array as da
 
 from ncempy.io import dm
-
-mimetypes.add_type('application/x-DM', '.dm3')
-mimetypes.add_type('application/x-DM', '.dm4')
 
 
 def _num_z(dm_obj):

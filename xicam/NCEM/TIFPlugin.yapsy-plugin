@@ -1,9 +1,0 @@
-[Core]
-Name = TIFPlugin
-Module = TIFPlugin.py
-
-[Documentation]
-Author = Peter Ercius
-Version = 0.1.0
-Website = http://lotsofplugins.com
-Description = Xicam plugin to load TIF files using tifffile

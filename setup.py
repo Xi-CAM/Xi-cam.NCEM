@@ -95,15 +95,15 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    entry_points={"intake.catalogs": ["application/x-DM = xicam.NCEM.DMPlugin:ingest_NCEM_DM",
-                                      "application/x-EMD = xicam.NCEM.EMDPlugin:ingest_NCEM_EMD",
-                                      "application/x-EMD-VELOX = xicam.NCEM.EMDPlugin:ingest_NCEM_EMD_VELOX",
-                                      "application/x-MRC = xicam.NCEM.MRCPlugin:ingest_NCEM_MRC",
-                                      "application/x-SER = xicam.NCEM.SERPlugin:ingest_NCEM_SER",
-                                      "image/tif = xicam.NCEM.TIFPlugin:ingest_NCEM_TIF"],
-                  "databroker.sniffers": ['emd_sniffer = xicam.NCEM.EMDPlugin:emd_sniffer',
-                                          'mrc_sniffer = xicam.NCEM.MRCPlugin:mrc_sniffer'],
-                  "databroker.handlers": ["NCEM_DM = xicam.NCEM.DMPlugin:handler_NCEM_DM"],
+    entry_points={"intake.catalogs": ["application/x-DM = xicam.NCEM.ingestors.DMPlugin:ingest_NCEM_DM",
+                                      "application/x-EMD = xicam.NCEM.ingestors.EMDPlugin:ingest_NCEM_EMD",
+                                      "application/x-EMD-VELOX = xicam.NCEM.ingestors.EMDPlugin:ingest_NCEM_EMD_VELOX",
+                                      "application/x-MRC = xicam.NCEM.ingestors.MRCPlugin:ingest_NCEM_MRC",
+                                      "application/x-SER = xicam.NCEM.ingestors.SERPlugin:ingest_NCEM_SER",
+                                      "image/tif = xicam.NCEM.ingestors.TIFPlugin:ingest_NCEM_TIF"],
+                  "databroker.sniffers": ['emd_sniffer = xicam.NCEM.ingestors.EMDPlugin:emd_sniffer',
+                                          'mrc_sniffer = xicam.NCEM.ingestors.MRCPlugin:mrc_sniffer'],
+                  "databroker.handlers": [],
                   "xicam.plugins.GUIPlugin": ["NCEM = xicam.NCEM:NCEMPlugin"],
                   "xicam.plugins.WidgetPlugin": ["ncem_viewer = xicam.NCEM.widgets.NCEMViewerPlugin:NCEMViewerPlugin"]
                   },

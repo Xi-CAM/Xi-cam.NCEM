@@ -1,26 +1,21 @@
 import numpy as np
 from qtpy.QtCore import *
 from qtpy.QtGui import *
-from qtpy.QtWidgets import *
 
 from databroker.core import BlueskyRun
 
-from xicam.core import msg
-from xicam.core.data import load_header, NonDBHeader
+from xicam.core.data import NonDBHeader
 
 from xicam.plugins import GUIPlugin, GUILayout
-import pyqtgraph as pg
-from functools import partial
-from xicam.gui.widgets.dynimageview import DynImageView
 from . import widgets
-from xicam.gui.widgets.metadataview import MetadataView
 
 from xicam.gui.widgets.tabview import TabView
 
 from .patches import pyqtgraph_export
 from .patches import pyqtgraph_tiffexporter
+from . import ingestors  # necessary unused import; registers mimetypes
 
-from . import DMPlugin  # Necessary unused import to register mimetype
+from xicam.NCEM.ingestors import DMPlugin
 
 
 class NCEMPlugin(GUIPlugin):

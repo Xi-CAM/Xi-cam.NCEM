@@ -18,25 +18,17 @@ Notes:
 import json
 import functools
 import time
-import mimetypes
 import dask
 import dask.array as da
 from pathlib import Path
 
 import event_model
-
-from xicam.plugins.datahandlerplugin import DataHandlerPlugin, start_doc, descriptor_doc, event_doc, stop_doc, \
-    embedded_local_event_doc
 from xicam.core import msg
 
 from numpy import where as npwhere
 from numpy import ndarray as ndarray
 from ncempy.io import emd  # EMD Berkeley datasets
 from ncempy.io import emdVelox  # EMD Velox datasets
-
-mimetypes.add_type('application/x-EMD', '.emd')
-mimetypes.add_type('application/x-EMD-VELOX', '.emd')
-
 
 def _num_t(emd_obj):
     """ The number of slices in the first dimension (C-ordering) for Berkeley data sets
