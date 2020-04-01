@@ -100,7 +100,7 @@ setup(
                                       "application/x-EMD-VELOX = xicam.NCEM.ingestors.EMDPlugin:ingest_NCEM_EMD_VELOX",
                                       "application/x-MRC = xicam.NCEM.ingestors.MRCPlugin:ingest_NCEM_MRC",
                                       "application/x-SER = xicam.NCEM.ingestors.SERPlugin:ingest_NCEM_SER",
-                                      "image/tif = xicam.NCEM.ingestors.TIFPlugin:ingest_NCEM_TIF"],
+                                      "image/tiff = xicam.NCEM.ingestors.TIFPlugin:ingest_NCEM_TIF"],
                   "databroker.sniffers": ['emd_sniffer = xicam.NCEM.ingestors.EMDPlugin:emd_sniffer', ],
                   "databroker.handlers": [],
                   "xicam.plugins.GUIPlugin": ["NCEM = xicam.NCEM:NCEMPlugin"],
