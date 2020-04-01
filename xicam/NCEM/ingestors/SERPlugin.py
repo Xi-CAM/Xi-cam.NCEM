@@ -66,8 +66,9 @@ def _metadata(path):
     return metaData
 
 
-def _get_slice(ser_obj, t):
-    return ser_obj.getDataset(t)[0]
+def _get_slice(path, t):
+    with ser.fileSER(path) as ser_obj:
+        return ser_obj.getDataset(t)[0]
 
 
 def ingest_NCEM_SER(paths):
@@ -83,12 +84,12 @@ def ingest_NCEM_SER(paths):
 
     ser_handle = ser.fileSER(path)
     num_t = _num_t(metadata)
-    first_frame = _get_slice(ser_handle, 0)
+    first_frame = _get_slice(path, 0)
     shape = first_frame.shape
     dtype = first_frame.dtype
 
     delayed_get_slice = dask.delayed(_get_slice)
-    dask_data = da.stack([da.from_delayed(delayed_get_slice(ser_handle, t), shape=shape, dtype=dtype)
+    dask_data = da.stack([da.from_delayed(delayed_get_slice(path, t), shape=shape, dtype=dtype)
                           for t in range(num_t)])
 
     # Compose descriptor

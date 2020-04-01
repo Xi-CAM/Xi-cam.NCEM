@@ -18,8 +18,9 @@ def _num_t(mrc_obj):
     return int(mrc_obj.dataSize[0])
 
 
-def _get_slice(mrc_obj, t):
-    return mrc_obj.getSlice(t)
+def _get_slice(path, t):
+    with mrc.fileMRC(path) as mrc_obj:
+        return mrc_obj.getSlice(t)
 
 
 @functools.lru_cache(maxsize=10, typed=False)
@@ -78,12 +79,12 @@ def ingest_NCEM_MRC(paths):
 
     mrc_handle = mrc.fileMRC(path)
     num_t = _num_t(mrc_handle)
-    first_frame = _get_slice(mrc_handle, 0)
+    first_frame = _get_slice(path, 0)
     shape = first_frame.shape
     dtype = first_frame.dtype
 
     delayed_get_slice = dask.delayed(_get_slice)
-    dask_data = da.stack([da.from_delayed(delayed_get_slice(mrc_handle, t), shape=shape, dtype=dtype)
+    dask_data = da.stack([da.from_delayed(delayed_get_slice(path, t), shape=shape, dtype=dtype)
                           for t in range(num_t)])
 
     # Compose descriptor
