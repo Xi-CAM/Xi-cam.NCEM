@@ -21,6 +21,7 @@ import time
 import dask
 import dask.array as da
 from pathlib import Path
+import numpy as np
 
 import event_model
 from xicam.core import msg
@@ -58,7 +59,7 @@ def _get_slice(emd_obj, t, dset_num=0):
         im1 = dataset0[t, :, :]
     elif dataset0.ndim == 4:
         im1 = dataset0[t, 0, :, :]
-    return im1
+    return np.asarray(im1)
 
 
 @functools.lru_cache(maxsize=10, typed=False)
@@ -168,7 +169,8 @@ def ingest_NCEM_EMD(paths):
     shape = first_frame.shape
     dtype = first_frame.dtype
 
-    dask_data = da.stack([da.from_delayed(dask.delayed(_get_slice)(emd_handle, t), shape=shape, dtype=dtype)
+    delayed_get_slice = dask.delayed(_get_slice)
+    dask_data = da.stack([da.from_delayed(delayed_get_slice(emd_handle, t), shape=shape, dtype=dtype)
                           for t in range(num_t)])
 
     # Compose descriptor
