@@ -9,14 +9,8 @@ import tifffile
 
 
 def _get_slice(path, t):
-    data = tifffile.imread(path)
-
-    if data.ndim == 3:
-        im1 = data[t, :, :]
-    elif data.ndim == 2:
-        im1 = data
-
-    return im1
+    data = tifffile.imread(path, key=t)
+    return data
 
 
 def _num_t(path):
