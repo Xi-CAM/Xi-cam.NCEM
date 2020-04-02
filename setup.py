@@ -95,12 +95,12 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    entry_points={"intake.catalogs": ["application/x-DM = xicam.NCEM.ingestors.DMPlugin:ingest_NCEM_DM",
-                                      "application/x-EMD = xicam.NCEM.ingestors.EMDPlugin:ingest_NCEM_EMD",
-                                      "application/x-EMD-VELOX = xicam.NCEM.ingestors.EMDPlugin:ingest_NCEM_EMD_VELOX",
-                                      "application/x-MRC = xicam.NCEM.ingestors.MRCPlugin:ingest_NCEM_MRC",
-                                      "application/x-SER = xicam.NCEM.ingestors.SERPlugin:ingest_NCEM_SER",
-                                      "image/tiff = xicam.NCEM.ingestors.TIFPlugin:ingest_NCEM_TIF"],
+    entry_points={"databroker.ingestors": ["application/x-DM = xicam.NCEM.ingestors.DMPlugin:ingest_NCEM_DM",
+                                           "application/x-EMD = xicam.NCEM.ingestors.EMDPlugin:ingest_NCEM_EMD",
+                                           "application/x-EMD-VELOX = xicam.NCEM.ingestors.EMDPlugin:ingest_NCEM_EMD_VELOX",
+                                           "application/x-MRC = xicam.NCEM.ingestors.MRCPlugin:ingest_NCEM_MRC",
+                                           "application/x-SER = xicam.NCEM.ingestors.SERPlugin:ingest_NCEM_SER",
+                                           "image/tiff = xicam.NCEM.ingestors.TIFPlugin:ingest_NCEM_TIF"],
                   "databroker.sniffers": ['emd_sniffer = xicam.NCEM.ingestors.EMDPlugin:emd_sniffer', ],
                   "databroker.handlers": [],
                   "xicam.plugins.GUIPlugin": ["NCEM = xicam.NCEM:NCEMPlugin"],
