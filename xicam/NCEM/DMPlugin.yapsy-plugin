@@ -1,9 +1,0 @@
-[Core]
-Name = DMPlugin
-Module = DMPlugin.py
-
-[Documentation]
-Author = Peter Ercius
-Version = 0.1.0
-Website = http://lotsofplugins.com
-Description = Literally my first plugin

@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
-from xicam.plugins.WidgetPlugin import QWidgetPlugin
+from xicam.plugins.widgetplugin import QWidgetPlugin
 
 from xicam.core import msg
 
