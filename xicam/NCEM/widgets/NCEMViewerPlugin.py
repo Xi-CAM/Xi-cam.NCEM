@@ -108,10 +108,14 @@ class NCEMViewerPlugin(DynImageView, CatalogView, QWidgetPlugin):
         outName = dlg.getSaveFileName(filter='tif')
         msg.logMessage(outName)
 
-        md = self.header.descriptordocs[0]
-        scale0 = (1.0 / float(md['PhysicalSizeX']), 1.0 / float(md['PhysicalSizeY']))
-        msg.logMessage('meta data = {}'.format(type(scale0[0])))
+        image = self.xarray[self.currentIndex, :, :]
+        scale0 = (1, 1)
+        metadata = {'unit': 'nm'}
 
-        image = self.header.meta_array('primary')
-        msg.logMessage('image type = {}'.format(type(image)))
-        imsave('.'.join(outName),image,imagej=True,resolution=scale0, metadata={'unit': 'nm'})
+        #md = self.header.descriptordocs[0]
+        #scale0 = (1.0 / float(md['PhysicalSizeX']), 1.0 / float(md['PhysicalSizeY']))
+        #msg.logMessage('meta data = {}'.format(type(scale0[0])))
+
+        #image = self.header.meta_array('primary')
+        #msg.logMessage('image type = {}'.format(type(image)))
+        imsave('.'.join(outName),image,imagej=True,resolution=scale0, metadata=metadata)
