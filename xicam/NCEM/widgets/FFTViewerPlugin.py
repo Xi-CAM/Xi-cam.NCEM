@@ -14,6 +14,10 @@ from .ncemimageview import NCEMImageView
 class FFTViewerPlugin(QWidgetPlugin):
     def __init__(self, catalog, stream: str = 'primary', field: str = 'raw', toolbar: QToolBar = None, *args, **kwargs):
 
+        self.stream = stream
+        self.field = field
+        self.catalog = catalog
+
         super(FFTViewerPlugin, self).__init__(*args, **kwargs)
 
         # Two NCEM image views
@@ -34,8 +38,7 @@ class FFTViewerPlugin(QWidgetPlugin):
         # Add ROI to real image
         # Retrieve the metadata for pixel scale and units
         self.Rroi = pg.RectROI(pos=(0, 0), size=(1, 1))
-        Rview = self.Rimageview.view.vb  # type: pg.ViewBox
-        Rview.addItem(self.Rroi)
+        self.Rimageview.view.vb.addItem(self.Rroi)
 
         # Hide the menu and roi buttons in the FFT view
         self.Fimageview.ui.menuBtn.setParent(None)
@@ -47,22 +50,32 @@ class FFTViewerPlugin(QWidgetPlugin):
             self.updateFFT)  # TODO: If you'd like, use sigTimeChangeFinished here instead?
 
         # Init vars
-        self.header = None
+        # self.header = None
         self.autoLevels = True
         # Set catalog
-        if catalog: self.setCatalog(catalog, stream=stream, field=field)
+        if catalog:
+            self.setCatalog(catalog, stream=stream, field=field)
 
         # Initialize real space ROI size
-        try:
-            md = self.header.descriptordocs[0]
-            scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
-            units0 = (md['PhysicalSizeXUnit'], md['PhysicalSizeYUnit'])
-        except:
+        start_doc = getattr(self.Rimageview.catalog, stream).metadata['start']
+
+        if 'PhysicalSizeX' in start_doc:
+            #  Retrieve the metadata for pixel scale and units
+            scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
+            units0 = (start_doc['PhysicalSizeXUnit'], start_doc['PhysicalSizeYUnit'])
+        else:
             scale0 = (1, 1)
             units0 = ('', '')
-            msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
-        self.Rroi.setPos((0, 0))
-        self.Rroi.setSize((scale0[0] * 50, scale0[1] * 50))
+            msg.logMessage('FFTviewer: No pixel size or units detected')
+
+        # Workaround to add the scale to the image
+        self.Rimageview.setImage(self.Rimageview.xarray, scale=scale0)
+
+        # Set the starting position of the real ROI
+        sh = self.Rimageview.xarray.shape
+        sz = [int(ii / 8) for ii in sh]
+        self.Rroi.setPos((scale0[-1]*(sh[-1]/2-sz[-1]/2), scale0[-2]*(sh[-2]/2-sz[-2]/2)))
+        self.Rroi.setSize((scale0[-1] * sz[-1], scale0[-2] * sz[-2]))
         self.Rimageview.autoRange()
 
     def updateFFT(self):
@@ -74,12 +87,12 @@ class FFTViewerPlugin(QWidgetPlugin):
         try:
             data = self.Rimageview.imageItem.image
 
+            start_doc = getattr(self.Rimageview.catalog, self.stream).metadata['start']
             # Get the pixel size
-            try:
-                md = self.header.descriptordocs[0]
-                scale0 = (md['PhysicalSizeX'], md['PhysicalSizeY'])
-                units0 = (md['PhysicalSizeXUnit'], md['PhysicalSizeYUnit'])
-            except:
+            if 'PhysicalSizeX' in start_doc:
+                scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
+                units0 = (start_doc['PhysicalSizeXUnit'], start_doc['PhysicalSizeYUnit'])
+            else:
                 scale0 = (1, 1)
                 units0 = ('', '')
                 msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
@@ -97,6 +110,5 @@ class FFTViewerPlugin(QWidgetPlugin):
             self.Rroi.setPen(pg.mkPen('r'))
 
     def setCatalog(self, catalog: NonDBHeader, stream: str, field: str, *args, **kwargs):
-        self.catalog = catalog
         self.Rimageview.setCatalog(catalog, stream, field, *args, **kwargs)
         self.updateFFT()

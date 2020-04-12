@@ -4,12 +4,14 @@ from xicam.plugins import QWidgetPlugin
 from pyqtgraph import ImageView, PlotItem
 # from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
-from qtpy.QtCore import *
-from qtpy.QtGui import *
+#from qtpy.QtCore import *
+#from qtpy.QtGui import *
+from qtpy.QtCore import Qt
 
 from xicam.core import msg
 #from xicam.gui.widgets.dynimageview import DynImageView
 from xicam.gui.widgets.imageviewmixins import CatalogView
+# from xicam.gui.widgets.imageviewmixins import Crosshair, PixelCoordinates, PixelSpace
 
 from .ncemimageview import NCEMImageView
 
@@ -68,11 +70,28 @@ class NCEMViewerPlugin(NCEMImageView, CatalogView, QWidgetPlugin):
         self.ui.gridLayout.addWidget(self.ui.graphicsView, 0, 0, 3, 1)
 
         # Setup coordinates label
-        # self.coordinatesLbl = QLabel('--COORDINATES WILL GO HERE--')
-        # self.ui.gridLayout.addWidget(self.coordinatesLbl, 3, 0, 1, 1, alignment=Qt.AlignHCenter)
+        #self.coordinatesLbl = QLabel('--COORDINATES WILL GO HERE--')
+        #self.ui.gridLayout.addWidget(self.coordinatesLbl, 3, 0, 1, 1, alignment=Qt.AlignHCenter)
 
         if catalog:
             self.setCatalog(catalog, stream=stream, field=field)
+
+        start_doc = getattr(self.catalog, self.stream).metadata['start']
+
+        if 'PhysicalSizeX' in start_doc:
+            #  Retrieve the metadata for pixel scale and units
+            scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
+            units0 = (start_doc['PhysicalSizeXUnit'], start_doc['PhysicalSizeYUnit'])
+        else:
+            scale0 = (1, 1)
+            units0 = ('', '')
+            msg.logMessage('NCEMviewer: No pixel size or units detected')
+
+        # Only way to set scale on the ImageView is to set the image again
+        self.setImage(self.xarray, scale=scale0)
+
+        self.axesItem.setLabel('bottom', text='X', units=units0[0])
+        self.axesItem.setLabel('left', text='Y', units=units0[1])
 
     # def setHeader(self, header: NonDBHeader, field: str, *args, **kwargs):
     #     self.header = header
