@@ -68,6 +68,8 @@ def _metadata(path):  # parameterized by path rather than emd_obj so that hashin
     metaData = {}
     metaData['veloxFlag'] = False
 
+    metaData['FileName'] = path
+
     # EMD Berkeley
     emd_obj = emd.fileEMD(path, readonly=True)
     dataGroup = emd_obj.list_emds[0]
@@ -237,6 +239,8 @@ def _metadata_velox(path):  # parameterized by path rather than emd_obj so that 
 
     metaData = {}
     metaData['veloxFlag'] = True
+
+    metaData['FileName'] = path
 
     emd_obj = emdVelox.fileEMDVelox(path)
     dataGroup = emd_obj.list_data[0]

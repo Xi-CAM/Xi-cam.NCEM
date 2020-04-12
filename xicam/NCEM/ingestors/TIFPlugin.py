@@ -22,16 +22,11 @@ def _num_t(path):
     return num_t
 
 
-def _metadata():
-    metaData = {}
-
-    # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = 1
-    metaData['PhysicalSizeXOrigin'] = 0
-    metaData['PhysicalSizeXUnit'] = ''
-    metaData['PhysicalSizeY'] = 1
-    metaData['PhysicalSizeYOrigin'] = 0
-    metaData['PhysicalSizeYUnit'] = ''
+def _metadata(path):
+    # Store dummy X and Y pixel size, offset and unit
+    # store current path
+    metaData = {'FileName': path, 'PhysicalSizeX': 1, 'PhysicalSizeXOrigin': 0, 'PhysicalSizeXUnit': '',
+                'PhysicalSizeY': 1, 'PhysicalSizeYOrigin': 0, 'PhysicalSizeYUnit': ''}
 
     return metaData
 
@@ -42,7 +37,7 @@ def ingest_NCEM_TIF(paths):
 
     # Compose run start
     run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle
-    start_doc = metadata = _metadata()
+    start_doc = _metadata(path)
     start_doc.update(run_bundle.start_doc)
     start_doc["sample_name"] = Path(paths[0]).resolve().stem
     yield 'start', start_doc
@@ -70,12 +65,14 @@ def ingest_NCEM_TIF(paths):
 
     # NOTE: Resource document may be meaningful in the future. For transient access it is not useful
     # # Compose resource
-    # resource = run_bundle.compose_resource(root=Path(path).root, resource_path=path, spec='NCEM_DM', resource_kwargs={})
+    # resource = run_bundle.compose_resource(root=Path(path).root,
+    #                                        resource_path=path, spec='NCEM_DM', resource_kwargs={})
     # yield 'resource', resource.resource_doc
 
     # Compose datum_page
     # z_indices, t_indices = zip(*itertools.product(z_indices, t_indices))
-    # datum_page_doc = resource.compose_datum_page(datum_kwargs={'index_z': list(z_indices), 'index_t': list(t_indices)})
+    # datum_page_doc = resource.compose_datum_page(datum_kwargs={'index_z': list(z_indices),
+    #                                                            'index_t': list(t_indices)})
     # datum_ids = datum_page_doc['datum_id']
     # yield 'datum_page', datum_page_doc
 

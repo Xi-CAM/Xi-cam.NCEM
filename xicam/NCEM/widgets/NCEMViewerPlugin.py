@@ -1,8 +1,8 @@
-import itertools
+from pathlib import Path
 
 from xicam.plugins import QWidgetPlugin
-from pyqtgraph import ImageView, PlotItem, FileDialog
-from xicam.core.data import NonDBHeader
+from pyqtgraph import ImageView, PlotItem
+# from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
 from qtpy.QtCore import *
 from qtpy.QtGui import *
@@ -103,19 +103,50 @@ class NCEMViewerPlugin(DynImageView, CatalogView, QWidgetPlugin):
 
     def export(self):
         from tifffile import imsave
+        from pyqtgraph import FileDialog
 
-        dlg = FileDialog()
-        outName = dlg.getSaveFileName(filter='tif')
-        msg.logMessage(outName)
+        start_doc = getattr(self.catalog, self.stream).metadata['start']
+        if 'FileName' in start_doc:
+            current_dir = Path(start_doc['FileName']).parent
+        else:
+            current_dir = Path.home()
 
-        image = self.xarray[self.currentIndex, :, :]
-        scale0 = (1, 1)
-        metadata = {'unit': 'nm'}
+        # Get a file path to save to in current directory
+        fd = FileDialog()
+        fd.setNameFilter("TIF (*.tif)")
+        fd.setDirectory(str(current_dir))
+        fd.setFileMode(FileDialog.AnyFile)
+        fd.setAcceptMode(FileDialog.AcceptSave)
 
-        #md = self.header.descriptordocs[0]
-        #scale0 = (1.0 / float(md['PhysicalSizeX']), 1.0 / float(md['PhysicalSizeY']))
-        #msg.logMessage('meta data = {}'.format(type(scale0[0])))
+        if fd.exec_():
+            file_names = fd.selectedFiles()[0]
+        outPath = Path(file_names)
 
-        #image = self.header.meta_array('primary')
-        #msg.logMessage('image type = {}'.format(type(image)))
-        imsave('.'.join(outName),image,imagej=True,resolution=scale0, metadata=metadata)
+        if outPath.suffix != '.tif':
+            outPath = outPath.with_suffix('.tif')
+
+        if 'PhysicalSizeX' in start_doc:
+            #  Retrieve the metadata for pixel scale and units
+            units0 = (start_doc['PhysicalSizeXUnit'], start_doc['PhysicalSizeYUnit'])
+            scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
+
+            # Change to nanometers if meters (for SER files)
+            if units0[0] == 'm':
+                units0 = ('nm', 'nm')
+                scale0 = [ii*1e9 for ii in scale0]
+
+        else:
+            scale0 = (1, 1)
+            units0 = ('', '')
+            msg.logMessage('NCEMviewer: No pixel size or units detected')
+
+        # Change scale from 1/pixel to pixel
+        scale0 = [1/ii for ii in scale0]
+
+        # Add units to metadata for imagej type output
+        metadata = {'unit': units0[0]}
+
+        # Get the data and change to float
+        image = self.xarray[self.currentIndex, :, :].astype('f')
+
+        imsave(outPath, image, imagej=True, resolution=scale0, metadata=metadata)
