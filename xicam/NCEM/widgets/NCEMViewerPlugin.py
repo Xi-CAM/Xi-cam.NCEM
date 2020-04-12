@@ -8,11 +8,13 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 
 from xicam.core import msg
-from xicam.gui.widgets.dynimageview import DynImageView
+#from xicam.gui.widgets.dynimageview import DynImageView
 from xicam.gui.widgets.imageviewmixins import CatalogView
 
+from .ncemimageview import NCEMImageView
 
-class NCEMViewerPlugin(DynImageView, CatalogView, QWidgetPlugin):
+
+class NCEMViewerPlugin(NCEMImageView, CatalogView, QWidgetPlugin):
     def __init__(self, catalog, stream: str = 'primary', field: str = 'raw',
                  toolbar: QToolBar = None, *args, **kwargs):
 

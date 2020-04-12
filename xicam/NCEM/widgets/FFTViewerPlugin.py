@@ -1,26 +1,14 @@
-import itertools
-
 from xicam.plugins import QWidgetPlugin
 from xicam.core.data import NonDBHeader
 from qtpy.QtWidgets import *
 import numpy as np
 from xicam.core import msg
-from xicam.gui.widgets.dynimageview import DynImageView
-from xicam.gui.widgets.imageviewmixins import CatalogView
+#from xicam.gui.widgets.dynimageview import DynImageView
+#from xicam.gui.widgets.imageviewmixins import CatalogView, QCoordinates, QSpace
 from .NCEMViewerPlugin import NCEMViewerPlugin
 import pyqtgraph as pg
 
-
-class DynImageView_patch(DynImageView, CatalogView, ):
-    """ Patch to connect keyboard presses in timeline
-    to emit a signal. This will be added as a patch to
-    Xicam in general.
-    """
-
-    def evalKeyState(self):
-        super(DynImageView_patch, self).evalKeyState()
-        (ind, time) = self.timeIndex(self.timeLine)
-        self.sigTimeChanged.emit(ind, time)
+from .ncemimageview import NCEMImageView
 
 
 class FFTViewerPlugin(QWidgetPlugin):
@@ -28,9 +16,10 @@ class FFTViewerPlugin(QWidgetPlugin):
 
         super(FFTViewerPlugin, self).__init__(*args, **kwargs)
 
-        # Two Dynamic image views (maybe only need 1 for the main data. The FFT can be an ImageView()
+        # Two NCEM image views
         self.Rimageview = NCEMViewerPlugin(catalog)
-        self.Fimageview = DynImageView_patch()
+        #self.Fimageview = DynImageView_patch()
+        self.Fimageview = NCEMImageView()
         # Keep Y-axis as is
         self.Rimageview.view.invertY(True)
         self.Fimageview.view.invertY(True)
