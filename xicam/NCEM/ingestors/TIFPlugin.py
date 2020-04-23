@@ -22,16 +22,28 @@ def _num_t(path):
     return num_t
 
 
-def _metadata():
+def _metadata(path):
     metaData = {}
 
+    im = tifffile.TiffFile(path)
+    if im.is_imagej:
+        xres_value = im.pages[0].tags['XResolution'].value
+        yres_value = im.pages[0].tags['YResolution'].value
+        xres = xres_value[0] / xres_value[1]
+        yres = yres_value[0] / yres_value[1]
+
+        units = im.imagej_metadata['unit']
+    else:
+        xres = 1
+        yres = 1
+
     # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = 1
+    metaData['PhysicalSizeX'] = xres
     metaData['PhysicalSizeXOrigin'] = 0
-    metaData['PhysicalSizeXUnit'] = ''
-    metaData['PhysicalSizeY'] = 1
+    metaData['PhysicalSizeXUnit'] = units
+    metaData['PhysicalSizeY'] = yres
     metaData['PhysicalSizeYOrigin'] = 0
-    metaData['PhysicalSizeYUnit'] = ''
+    metaData['PhysicalSizeYUnit'] = units
 
     return metaData
 
@@ -42,7 +54,7 @@ def ingest_NCEM_TIF(paths):
 
     # Compose run start
     run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle
-    start_doc = metadata = _metadata()
+    start_doc = metadata = _metadata(path)
     start_doc.update(run_bundle.start_doc)
     start_doc["sample_name"] = Path(paths[0]).resolve().stem
     yield 'start', start_doc
@@ -86,5 +98,16 @@ def ingest_NCEM_TIF(paths):
 
 
 if __name__ == "__main__":
-    print(list(ingest_NCEM_TIF(
-        ["/home/rp/data/Tender PFSA Beam Damage/N211_ARDry/Pilatus/N211ArDry_DamStudy_2460_20s_6402-00001.tif"])))
+    import tempfile
+    import numpy as np
+
+    # Write a small MRC file
+    dd = np.mgrid[0:30, 0:40, 0:50]
+    dd = dd.astype('<u2')
+    dd = dd[0, :, :, :]
+
+    tmp = tempfile.TemporaryDirectory()
+    fPath = Path(tmp.name) / Path('temp_tif.tif')
+
+    tifffile.imsave(fPath, dd, imagej=True, resolution=(0.2, 0.2), metadata={'unit': 'um'})
+    print(list(ingest_NCEM_TIF([str(fPath)])))
