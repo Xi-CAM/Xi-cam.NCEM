@@ -31,14 +31,14 @@ from numpy import ndarray as ndarray
 from ncempy.io import emd  # EMD Berkeley datasets
 from ncempy.io import emdVelox  # EMD Velox datasets
 
-def _num_t(emd_obj):
+def _num_t(emd_obj, dset_num=0):
     """ The number of slices in the first dimension (C-ordering) for Berkeley data sets
     OR
     The number of slices in the last dimension (F-ordering) for Velox data sets
 
     """
 
-    dataGroup = emd_obj.list_emds[0]
+    dataGroup = emd_obj.list_emds[dset_num]
     dataset0 = dataGroup['data']
     shape = dataset0.shape
 
@@ -49,6 +49,10 @@ def _num_t(emd_obj):
         out = shape[0]  # Velox files are written incorrectly using Fortran ordering
 
     return out
+
+
+def _num_datasets(emd_obj):
+    return len(emd_obj.list_emds)
 
 
 def _get_slice(emd_obj, t, dset_num=0):
@@ -62,6 +66,17 @@ def _get_slice(emd_obj, t, dset_num=0):
     return np.asarray(im1)
 
 
+# Modify types if needed
+def _cleandict(md):
+    for k, v in md.items():
+        if isinstance(v, dict):
+            _cleandict(v)
+        elif isinstance(v, bytes):
+            md[k] = v.decode('UTF8')
+        elif isinstance(v, ndarray):
+            md[k] = tuple(v)
+
+
 @functools.lru_cache(maxsize=10, typed=False)
 def _metadata(path):  # parameterized by path rather than emd_obj so that hashing lru hashing resolves easily
 
@@ -70,8 +85,6 @@ def _metadata(path):  # parameterized by path rather than emd_obj so that hashin
 
     # EMD Berkeley
     emd_obj = emd.fileEMD(path, readonly=True)
-    dataGroup = emd_obj.list_emds[0]
-    dataset0 = dataGroup['data']  # get the dataset in the first group found
 
     try:
         metaData['user'] = {}
@@ -98,24 +111,29 @@ def _metadata(path):  # parameterized by path rather than emd_obj so that hashin
         metaData['stage'].update(emd_obj.file_hdl['/stage'].attrs)
     except:
         pass
+
+    _cleandict(metaData)
+
+    return metaData
+
+
+@functools.lru_cache(maxsize=10, typed=False)
+def _metadata_from_dset(path, dset_num=0):  # parameterized by path rather than emd_obj so that hashing lru hashing resolves easily
+
+    metaData = {}
+    metaData['veloxFlag'] = False
+
+    # EMD Berkeley
+    emd_obj = emd.fileEMD(path, readonly=True)
+    dataGroup = emd_obj.list_emds[dset_num]
+    dataset0 = dataGroup['data']  # get the dataset in the first group found
+
     try:
         name = dataGroup.name.split('/')[-1]
         metaData[name] = {}
         metaData[name].update(dataGroup.attrs)
     except:
         pass
-
-    # Modify types if needed
-    def cleandict(md):
-        for k, v in md.items():
-            if isinstance(v, dict):
-                cleandict(v)
-            elif isinstance(v, bytes):
-                md[k] = v.decode('UTF8')
-            elif isinstance(v, ndarray):
-                md[k] = tuple(v)
-
-    cleandict(metaData)
 
     # Get the dim vectors
     dims = emd_obj.get_emddims(dataGroup)
@@ -145,6 +163,8 @@ def _metadata(path):  # parameterized by path rather than emd_obj so that hashin
 
     metaData['shape'] = dataset0.shape
 
+    _cleandict(metaData)
+
     return metaData
 
 
@@ -164,40 +184,45 @@ def ingest_NCEM_EMD(paths):
     start_doc = metadata
     yield 'start', start_doc
 
-    num_t = _num_t(emd_handle)
-    first_frame = _get_slice(emd_handle, 0)
-    shape = first_frame.shape
-    dtype = first_frame.dtype
+    for device_index in range(_num_datasets(emd_handle)):
 
-    delayed_get_slice = dask.delayed(_get_slice)
-    dask_data = da.stack([da.from_delayed(delayed_get_slice(emd_handle, t), shape=shape, dtype=dtype)
-                          for t in range(num_t)])
+        num_t = _num_t(emd_handle, dset_num=device_index)
+        first_frame = _get_slice(emd_handle, 0, dset_num=device_index)
+        shape = first_frame.shape
+        dtype = first_frame.dtype
 
-    # Compose descriptor
-    source = 'NCEM'
-    frame_data_keys = {'raw': {'source': source,
-                               'dtype': 'number',
-                               'shape': (num_t, *shape)}}
-    frame_stream_name = 'primary'
-    frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
-                                                        name=frame_stream_name,
-                                                        # configuration=_metadata(path)
-                                                        )
-    yield 'descriptor', frame_stream_bundle.descriptor_doc
+        delayed_get_slice = dask.delayed(_get_slice)
+        dask_data = da.stack([da.from_delayed(delayed_get_slice(emd_handle, t, dset_num=device_index), shape=shape, dtype=dtype)
+                              for t in range(num_t)])
 
-    # NOTE: Resource document may be meaningful in the future. For transient access it is not useful
-    # # Compose resource
-    # resource = run_bundle.compose_resource(root=Path(path).root, resource_path=path, spec='NCEM_DM', resource_kwargs={})
-    # yield 'resource', resource.resource_doc
+        # Compose descriptor
+        source = 'NCEM'
+        frame_data_keys = {'raw': {'source': source,
+                                   'dtype': 'number',
+                                   'shape': (num_t, *shape)}}
 
-    # Compose datum_page
-    # z_indices, t_indices = zip(*itertools.product(z_indices, t_indices))
-    # datum_page_doc = resource.compose_datum_page(datum_kwargs={'index_z': list(z_indices), 'index_t': list(t_indices)})
-    # datum_ids = datum_page_doc['datum_id']
-    # yield 'datum_page', datum_page_doc
+        # TODO: decide if devices should be in separate streams or just separate fields
 
-    yield 'event', frame_stream_bundle.compose_event(data={'raw': dask_data},
-                                                     timestamps={'raw': time.time()})
+        frame_stream_name = 'primary_' + str(device_index)  # TODO: get actual device names
+        frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
+                                                            name=frame_stream_name,
+                                                            # configuration=_metadata_from_dset(path, dset_num=device_index) # TODO: check validation here
+                                                            )
+        yield 'descriptor', frame_stream_bundle.descriptor_doc
+
+        # NOTE: Resource document may be meaningful in the future. For transient access it is not useful
+        # # Compose resource
+        # resource = run_bundle.compose_resource(root=Path(path).root, resource_path=path, spec='NCEM_DM', resource_kwargs={})
+        # yield 'resource', resource.resource_doc
+
+        # Compose datum_page
+        # z_indices, t_indices = zip(*itertools.product(z_indices, t_indices))
+        # datum_page_doc = resource.compose_datum_page(datum_kwargs={'index_z': list(z_indices), 'index_t': list(t_indices)})
+        # datum_ids = datum_page_doc['datum_id']
+        # yield 'datum_page', datum_page_doc
+
+        yield 'event', frame_stream_bundle.compose_event(data={'raw': dask_data},
+                                                         timestamps={'raw': time.time()})
 
     yield 'stop', run_bundle.compose_stop()
 
