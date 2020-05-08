@@ -76,27 +76,24 @@ Debugging
 Xicam allows the user to just call the xicam executable from anywhere
 once the anaconda environment is activated, which is very convenient.
 However, there the error is captured by a logger (see below)
-and debugging is difficult.
-Debugging in QT is possible using the steps below.
+and debugging is difficult. Debugging in QT is possible (see below).
 
-Follow these steps:
+Simple debugging
+----------------
 
-1. Find the xicam-script.pyw file in your environment's ../Scripts folder
-for example ~/Anaconda3/envs/xicam2/Scripts
+1. Open the xi-cam-unified/xicam folder. In this folder is a python file named
+run-xicam.py.
 
-Execute this in the command prompt
-
-::
-
-    python xicam-script.py
-
-The console output is shown in that console including error messages.
-
-Alternatively, to stop printing to console use
+Run this file in the command prompt using
 
 ::
 
-    pythonw xicam-script.py
+    python run-xicam.py
+
+The console output is shown in that console including print and error messages.
+
+PDB debugging
+-------------
 
 To enable debugging for a pyqt program insert this code where you want to stop the program
 
