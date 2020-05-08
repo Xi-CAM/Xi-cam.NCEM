@@ -122,4 +122,18 @@ def ingest_NCEM_MRC(paths):
 
 
 if __name__ == "__main__":
-    print(list(ingest_NCEM_MRC(["/home/rp/data/NCEM/Te_80k_L100mm_80Kx(1).mrc"])))
+    import tempfile
+    import numpy as np
+
+    # Write a small MRC file
+    dd = np.mgrid[0:30, 0:40, 0:50]
+    dd = dd.astype('<u2')
+    dd = dd[0, :, :, :]
+
+    tmp = tempfile.TemporaryDirectory()
+    fPath = Path(tmp.name) / Path('temp_mrc.mrc')
+
+    mrc.mrcWriter(str(fPath), dd, (0.1, 0.2, 0.3))
+
+    print(list(ingest_NCEM_MRC([str(fPath)])))
+
