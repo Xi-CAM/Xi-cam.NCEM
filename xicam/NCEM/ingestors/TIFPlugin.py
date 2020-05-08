@@ -36,6 +36,7 @@ def _metadata(path):
     else:
         xres = 1
         yres = 1
+        units = ''
 
     # Store the X and Y pixel size, offset and unit
     metaData['PhysicalSizeX'] = xres
@@ -98,5 +99,15 @@ def ingest_NCEM_TIF(paths):
 
 
 if __name__ == "__main__":
-    print(list(ingest_NCEM_TIF(
-        ["/home/rp/data/Tender PFSA Beam Damage/N211_ARDry/Pilatus/N211ArDry_DamStudy_2460_20s_6402-00001.tif"])))
+    import numpy as np
+    import tempfile
+
+    # Write a small TIF file
+    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
+    dd = dd.astype('<u2')
+
+    tmp = tempfile.TemporaryDirectory()
+    fPath = Path(tmp.name) / Path('temp_tif.tif')
+
+    tifffile.imsave(fPath, dd, imagej=True, resolution=(0.2, 0.2), metadata={'unit': 'um'})
+    print(list(ingest_NCEM_TIF([str(fPath)])))
