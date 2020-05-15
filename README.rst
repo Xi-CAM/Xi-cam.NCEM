@@ -58,7 +58,7 @@ Github repositories. A release is coming soon.
 
 ::
 
-    conda create --name xicam python=3.7 numpy scipy dask jupyter h5py pyqtgraph matplotlib netcdf4 xarray requests astropy numcodecs pyqt intake humanize
+    conda create --name xicam python=3.7 numpy scipy dask jupyter h5py pyqtgraph matplotlib netcdf4 xarray requests astropy numcodecs pyqt intake humanize zarr
     activate xicam
 
 4. Run the following pip commands from the parent directory of the cloned repositories above.
