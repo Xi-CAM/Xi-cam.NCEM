@@ -9,10 +9,10 @@ from qtpy.QtGui import *
 
 from xicam.core import msg
 from xicam.gui.widgets.dynimageview import DynImageView
-from xicam.gui.widgets.imageviewmixins import CatalogView
+from xicam.gui.widgets.imageviewmixins import CatalogView, FieldSelector, StreamSelector, ExportButton, BetterButtons
 
 
-class NCEMViewerPlugin(DynImageView, CatalogView, QWidgetPlugin):
+class NCEMViewerPlugin(ExportButton, BetterButtons, StreamSelector, FieldSelector, DynImageView, CatalogView, QWidgetPlugin):
     def __init__(self, catalog, stream: str = 'primary', field: str = 'raw',
                  toolbar: QToolBar = None, *args, **kwargs):
 
@@ -27,43 +27,6 @@ class NCEMViewerPlugin(DynImageView, CatalogView, QWidgetPlugin):
 
         super(NCEMViewerPlugin, self).__init__(**kwargs)
         self.axesItem.invertY(True)
-
-        # Setup axes reset button
-        self.resetAxesBtn = QPushButton('Reset Axes')
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.resetAxesBtn.sizePolicy().hasHeightForWidth())
-        self.resetAxesBtn.setSizePolicy(sizePolicy)
-        self.resetAxesBtn.setObjectName("resetAxes")
-        self.ui.gridLayout.addWidget(self.resetAxesBtn, 2, 1, 1, 1)
-        self.resetAxesBtn.clicked.connect(self.autoRange)
-
-        # Setup LUT reset button
-        self.resetLUTBtn = QPushButton('Reset LUT')
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.resetLUTBtn.sizePolicy().hasHeightForWidth())
-        # self.resetLUTBtn.setSizePolicy(sizePolicy)
-        # self.resetLUTBtn.setObjectName("resetLUTBtn")
-        self.ui.gridLayout.addWidget(self.resetLUTBtn, 3, 1, 1, 1)
-        self.resetLUTBtn.clicked.connect(self.autoLevels)
-
-        # Export button
-        self.exportBtn = QPushButton('Export')
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.exportBtn.sizePolicy().hasHeightForWidth())
-        self.ui.gridLayout.addWidget(self.exportBtn, 4, 1, 1, 1)
-        self.exportBtn.clicked.connect(self.export)
-
-        # Hide ROI button and the Menu button and rearrange
-        self.ui.roiBtn.setParent(None)
-        self.ui.menuBtn.setParent(None)
-        # self.ui.gridLayout.addWidget(self.ui.menuBtn, 1, 1, 1, 1)
-        self.ui.gridLayout.addWidget(self.ui.graphicsView, 0, 0, 3, 1)
 
         # Setup coordinates label
         # self.coordinatesLbl = QLabel('--COORDINATES WILL GO HERE--')
