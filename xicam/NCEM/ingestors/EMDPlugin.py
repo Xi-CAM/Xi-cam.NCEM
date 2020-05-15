@@ -22,6 +22,8 @@ import dask
 import dask.array as da
 from pathlib import Path
 import numpy as np
+from collections.abc import Iterable
+import numbers
 
 import event_model
 from xicam.core import msg
@@ -30,6 +32,22 @@ from numpy import where as npwhere
 from numpy import ndarray as ndarray
 from ncempy.io import emd  # EMD Berkeley datasets
 from ncempy.io import emdVelox  # EMD Velox datasets
+
+
+def _guess_type(value):
+    if isinstance(value, str):
+        return "string"
+    elif isinstance(value, numbers.Real):
+        return "number"
+    elif isinstance(value, bool):
+        return "bool"
+    elif isinstance(value, numbers.Integral):
+        return "integer"
+    # elif isinstance(value, Iterable):  # TODO: Ask about this in the coalition call; somehow this is breaking xarray's coords
+    #     return "array"
+    else:
+        return None
+
 
 def _num_t(emd_obj, dset_num=0):
     """ The number of slices in the first dimension (C-ordering) for Berkeley data sets
@@ -117,6 +135,11 @@ def _metadata(path):  # parameterized by path rather than emd_obj so that hashin
     return metaData
 
 
+def _dset_names(emd_obj):
+    return [emd_obj.list_emds[device_index].name.split('/')[-1] for device_index in range(_num_datasets(emd_obj))]
+
+
+
 @functools.lru_cache(maxsize=10, typed=False)
 def _metadata_from_dset(path, dset_num=0):  # parameterized by path rather than emd_obj so that hashing lru hashing resolves easily
 
@@ -184,7 +207,7 @@ def ingest_NCEM_EMD(paths):
     start_doc = metadata
     yield 'start', start_doc
 
-    for device_index in range(_num_datasets(emd_handle)):
+    for device_index, device_name in enumerate(_dset_names(emd_handle)):
 
         num_t = _num_t(emd_handle, dset_num=device_index)
         first_frame = _get_slice(emd_handle, 0, dset_num=device_index)
@@ -201,12 +224,21 @@ def ingest_NCEM_EMD(paths):
                                    'dtype': 'number',
                                    'shape': (num_t, *shape)}}
 
-        # TODO: decide if devices should be in separate streams or just separate fields
+        frame_stream_name = f'primary_{device_name}'
+        stream_metadata = _metadata_from_dset(path, dset_num=device_index)
+        configuration = {key: {"data": {key: value},
+                               "timestamps": {key: time.time()},
+                               "data_keys": {key: {"source": path,
+                                                   "dtype": _guess_type(value),
+                                                   "shape": [],
+                                                   "units": "",
+                                                   #"related_value": 0, ... # i.e. soft limits, precision
+                                                   }}}
+                         for key, value in stream_metadata.items() if _guess_type(value)}
 
-        frame_stream_name = 'primary_' + str(device_index)  # TODO: get actual device names
         frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
                                                             name=frame_stream_name,
-                                                            # configuration=_metadata_from_dset(path, dset_num=device_index) # TODO: check validation here
+                                                            configuration=configuration
                                                             )
         yield 'descriptor', frame_stream_bundle.descriptor_doc
 
