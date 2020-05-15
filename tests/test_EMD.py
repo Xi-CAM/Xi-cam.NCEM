@@ -50,5 +50,8 @@ def test_multi_device(EMD_multi_path):
 
     catalog.upsert(start, stop, doc_gen, [], {})
 
-    print(list(catalog[-1]))
-    catalog[-1]['primary_1'].to_dask()['raw'].compute()
+    run_catalog = catalog[-1]
+    stream_names = list(run_catalog)
+    print(stream_names)
+    run_catalog[stream_names[0]].to_dask()['raw'].compute()
+    run_catalog[stream_names[1]].to_dask()['raw'].compute()
