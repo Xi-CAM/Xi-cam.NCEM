@@ -25,12 +25,16 @@ def _get_slice(path, t):
 
 @functools.lru_cache(maxsize=10, typed=False)
 def _metadata(path):
+    metaData = {}
+
+    # Open file and parse the header
     with mrc.fileMRC(path) as mrc1:
         pass
-    metaData = mrc1.dataOut  # meta data information from the mrc header
 
     # Save most useful metaData
-    metaData = {}
+    metaData['axisOrientations'] = mrc1.axisOrientations  # meta data information from the mrc header
+    metaData['cellAngles'] = mrc1.cellAngles
+
     if hasattr(mrc1, 'FEIinfo'):
         # add in the special FEIinfo if it exists
         metaData.update(mrc1.FEIinfo)
@@ -45,13 +49,14 @@ def _metadata(path):
 
     metaData['FileName'] = path
 
-    rawtltName = os.path.splitext(path)[0] + '.rawtlt'
-    if os.path.isfile(rawtltName):
+    rawtltName = Path(path).with_suffix('.rawtlt')
+    if rawtltName.exists():
         with open(rawtltName, 'r') as f1:
             tilts = map(float, f1)
         metaData['tilt angles'] = tilts
-    FEIparameters = os.path.splitext(path)[0] + '.txt'
-    if os.path.isfile(FEIparameters):
+
+    FEIparameters = Path(path).with_suffix('.txt')
+    if FEIparameters.exists():
         with open(FEIparameters, 'r') as f2:
             lines = f2.readlines()
         pp1 = list([ii[18:].strip().split(':')] for ii in lines[3:-1])
@@ -117,4 +122,17 @@ def ingest_NCEM_MRC(paths):
 
 
 if __name__ == "__main__":
-    print(list(ingest_NCEM_MRC(["/home/rp/data/NCEM/Te_80k_L100mm_80Kx(1).mrc"])))
+    import tempfile
+    import numpy as np
+
+    # Write a small MRC file
+    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
+    dd = dd.astype('<u2')
+
+    tmp = tempfile.TemporaryDirectory()
+    fPath = Path(tmp.name) / Path('temp_mrc.mrc')
+
+    mrc.mrcWriter(str(fPath), dd, (0.1, 0.2, 0.3))
+
+    print(list(ingest_NCEM_MRC([str(fPath)])))
+

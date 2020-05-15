@@ -68,6 +68,8 @@ def _metadata(path):  # parameterized by path rather than emd_obj so that hashin
     metaData = {}
     metaData['veloxFlag'] = False
 
+    metaData['FileName'] = path
+
     # EMD Berkeley
     emd_obj = emd.fileEMD(path, readonly=True)
     dataGroup = emd_obj.list_emds[0]
@@ -238,6 +240,8 @@ def _metadata_velox(path):  # parameterized by path rather than emd_obj so that 
     metaData = {}
     metaData['veloxFlag'] = True
 
+    metaData['FileName'] = path
+
     emd_obj = emdVelox.fileEMDVelox(path)
     dataGroup = emd_obj.list_data[0]
     dataset0 = dataGroup['Data']
@@ -333,5 +337,23 @@ def emd_sniffer(path, first_bytes):
 
 
 if __name__ == "__main__":
-    print(list(ingest_NCEM_EMD(["/home/rp/data/NCEM/1435 1.2 Mx STEM HAADF-DF4-DF2-BF.emd"])))
+    import tempfile
+
+    # Write a small Berkeley EMD file
+    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
+    dd = dd.astype('<u2')
+
+    tmp = tempfile.TemporaryDirectory()
+    fPath = Path(tmp.name) / Path('temp_emd_berkeley.emd')
+
+    if fPath.exists():
+        fPath.unlink()
+
+    print(fPath)
+
+    with emd.fileEMD(fPath.as_posix(), readonly=False) as f0:
+        dims = emd.defaultDims(dd)
+        f0.put_emdgroup('test', dd, dims)
+
+    print(list(ingest_NCEM_EMD([str(fPath)])))
     # print(list(ingest_NCEM_EMD(["/home/rp/data/NCEM/twoDatasets.emd"])))
