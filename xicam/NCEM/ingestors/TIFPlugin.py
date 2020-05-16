@@ -96,18 +96,3 @@ def ingest_NCEM_TIF(paths):
                                                      timestamps={'raw': time.time()})
 
     yield 'stop', run_bundle.compose_stop()
-
-
-if __name__ == "__main__":
-    import numpy as np
-    import tempfile
-
-    # Write a small TIF file
-    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
-    dd = dd.astype('<u2')
-
-    tmp = tempfile.TemporaryDirectory()
-    fPath = Path(tmp.name) / Path('temp_tif.tif')
-
-    tifffile.imsave(fPath, dd, imagej=True, resolution=(0.2, 0.2), metadata={'unit': 'um'})
-    print(list(ingest_NCEM_TIF([str(fPath)])))

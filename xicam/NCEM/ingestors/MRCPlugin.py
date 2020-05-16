@@ -119,20 +119,3 @@ def ingest_NCEM_MRC(paths):
                                                      timestamps={'raw': time.time()})
 
     yield 'stop', run_bundle.compose_stop()
-
-
-if __name__ == "__main__":
-    import tempfile
-    import numpy as np
-
-    # Write a small MRC file
-    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
-    dd = dd.astype('<u2')
-
-    tmp = tempfile.TemporaryDirectory()
-    fPath = Path(tmp.name) / Path('temp_mrc.mrc')
-
-    mrc.mrcWriter(str(fPath), dd, (0.1, 0.2, 0.3))
-
-    print(list(ingest_NCEM_MRC([str(fPath)])))
-
