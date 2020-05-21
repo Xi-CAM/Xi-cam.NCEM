@@ -12,7 +12,7 @@ from xicam.gui.widgets.dynimageview import DynImageView
 from xicam.gui.widgets.imageviewmixins import CatalogView, FieldSelector, StreamSelector, ExportButton, BetterButtons
 
 
-class NCEMViewerPlugin(ExportButton, BetterButtons, StreamSelector, FieldSelector, DynImageView, CatalogView, QWidgetPlugin):
+class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButtons, DynImageView, CatalogView, QWidget):
     def __init__(self, catalog, stream: str = 'primary', field: str = 'raw',
                  toolbar: QToolBar = None, *args, **kwargs):
 
