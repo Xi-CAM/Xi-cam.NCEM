@@ -122,4 +122,5 @@ def ingest_NCEM_SER(paths):
 
 
 if __name__ == "__main__":
-    print(list(ingest_NCEM_SER(["/home/rp/data/NCEM/10_series_1.ser"])))
+    output = list(ingest_NCEM_SER([r"C:\Users\linol\Data/10_series_1.ser"]))
+    print(output)
