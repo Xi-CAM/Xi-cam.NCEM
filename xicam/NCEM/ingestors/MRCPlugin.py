@@ -40,12 +40,23 @@ def _metadata(path):
         metaData.update(mrc1.FEIinfo)
 
     # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = mrc1.voxelSize[2] * 1e-10  # change Angstroms to meters
-    metaData['PhysicalSizeXOrigin'] = 0
-    metaData['PhysicalSizeXUnit'] = 'm'
-    metaData['PhysicalSizeY'] = mrc1.voxelSize[1] * 1e-10  # change Angstroms to meters
-    metaData['PhysicalSizeYOrigin'] = 0
-    metaData['PhysicalSizeYUnit'] = 'm'
+    # Test for bad pixel sizes which happens often
+    if mrc1.voxelSize[2] > 0:
+        metaData['PhysicalSizeX'] = mrc1.voxelSize[2] * 1e-10  # change Angstroms to meters
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = 'm'
+    else:
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+    if mrc1.voxelSize[1] > 0:
+        metaData['PhysicalSizeY'] = mrc1.voxelSize[1] * 1e-10  # change Angstroms to meters
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = 'm'
+    else:
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     metaData['FileName'] = path
 
