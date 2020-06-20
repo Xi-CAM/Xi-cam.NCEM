@@ -384,10 +384,23 @@ def emd_sniffer(path, first_bytes):
     if not Path(path).suffix.lower() == '.emd':
         return
 
+    test_velox = False
     try:
-        emd1 = emd.fileEMD(path, readonly=True)
-        dataset0 = emd1.list_emds[0]['data']  # get the dataset in the first group found
-        return 'application/x-EMD'
-    except IndexError:
-        # Assume its a Velox
-        return 'application/x-EMD-VELOX'
+        # Test for Berkeley EMD
+        with emd.fileEMD(path, readonly=True) as emd1:
+            if len(emd1.list_emds) > 0:
+                return 'application/x-EMD'
+            else:
+                test_velox = True
+    except OSError:
+        # Not a HDF5 file
+        return
+
+    if test_velox:
+        # Test for Velox
+        with emdVelox.fileEMDVelox(path) as emd2:
+            ver = emd2.file_hdl['Version'][0].decode('ASCII')
+            if ver.find('Velox') > -1:
+                return 'application/x-EMD-VELOX'
+    else:
+        return
