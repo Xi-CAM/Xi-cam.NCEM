@@ -54,12 +54,20 @@ def _metadata(path):
             metaData[k] = v.decode('UTF8')
 
     # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = metaData['Calibration'][0]['CalibrationDelta']
-    metaData['PhysicalSizeXOrigin'] = metaData['Calibration'][0]['CalibrationOffset']
-    metaData['PhysicalSizeXUnit'] = 'm'  # always meters
-    metaData['PhysicalSizeY'] = metaData['Calibration'][1]['CalibrationDelta']
-    metaData['PhysicalSizeYOrigin'] = metaData['Calibration'][1]['CalibrationOffset']
-    metaData['PhysicalSizeYUnit'] = 'm'  # always meters
+    try:
+        metaData['PhysicalSizeX'] = metaData['Calibration'][0]['CalibrationDelta']
+        metaData['PhysicalSizeXOrigin'] = metaData['Calibration'][0]['CalibrationOffset']
+        metaData['PhysicalSizeXUnit'] = 'm'  # always meters
+        metaData['PhysicalSizeY'] = metaData['Calibration'][1]['CalibrationDelta']
+        metaData['PhysicalSizeYOrigin'] = metaData['Calibration'][1]['CalibrationOffset']
+        metaData['PhysicalSizeYUnit'] = 'm'  # always meters
+    except:
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     metaData['FileName'] = path
 

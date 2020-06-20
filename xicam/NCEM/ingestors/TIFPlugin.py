@@ -39,12 +39,20 @@ def _metadata(path):
         units = ''
 
     # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = xres
-    metaData['PhysicalSizeXOrigin'] = 0
-    metaData['PhysicalSizeXUnit'] = units
-    metaData['PhysicalSizeY'] = yres
-    metaData['PhysicalSizeYOrigin'] = 0
-    metaData['PhysicalSizeYUnit'] = units
+    try:
+        metaData['PhysicalSizeX'] = xres
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = units
+        metaData['PhysicalSizeY'] = yres
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = units
+    except:
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     return metaData
 

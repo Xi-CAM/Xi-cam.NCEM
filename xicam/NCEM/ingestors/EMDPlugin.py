@@ -174,17 +174,29 @@ def _metadata_from_dset(path, dset_num=0):  # parameterized by path rather than 
         dimZ = dims[1]
         dimY = dims[2]  # dataGroup['dim3']
         dimX = dims[3]  # dataGroup['dim4']
+    else:
+        dimZ = None
+        dimY = None
+        dimX = None
 
     # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = dimX[0][1] - dimX[0][0]
-    metaData['PhysicalSizeXOrigin'] = dimX[0][0]
-    metaData['PhysicalSizeXUnit'] = dimX[2]
-    metaData['PhysicalSizeY'] = dimY[0][1] - dimY[0][0]
-    metaData['PhysicalSizeYOrigin'] = dimY[0][0]
-    metaData['PhysicalSizeYUnit'] = dimY[2]
-    # metaData['PhysicalSizeZ'] = dimZ[0][1] - dimZ[0][0]
-    # metaData['PhysicalSizeZOrigin'] = dimZ[0][0]
-    # metaData['PhysicalSizeZUnit'] = dimZ[2]
+    try:
+        metaData['PhysicalSizeX'] = dimX[0][1] - dimX[0][0]
+        metaData['PhysicalSizeXOrigin'] = dimX[0][0]
+        metaData['PhysicalSizeXUnit'] = dimX[2]
+        metaData['PhysicalSizeY'] = dimY[0][1] - dimY[0][0]
+        metaData['PhysicalSizeYOrigin'] = dimY[0][0]
+        metaData['PhysicalSizeYUnit'] = dimY[2]
+        # metaData['PhysicalSizeZ'] = dimZ[0][1] - dimZ[0][0]
+        # metaData['PhysicalSizeZOrigin'] = dimZ[0][0]
+        # metaData['PhysicalSizeZUnit'] = dimZ[2]
+    except:
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     metaData['shape'] = dataset0.shape
 
@@ -317,8 +329,12 @@ def _metadata_velox(path):  # parameterized by path rather than emd_obj so that 
         metaData['PhysicalSizeYOrigin'] = float(mDataS['BinaryResult']['Offset']['y'])
         metaData['PhysicalSizeYUnit'] = mDataS['BinaryResult']['PixelUnitY']
     except:
-        msg.logMessage('EMD: Velox metadata parsing failed.')
-        raise
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     metaData.update(mDataS)
 

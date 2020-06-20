@@ -81,12 +81,20 @@ def _metadata(path):
                     del metaData[jj]
 
         # Store the X and Y pixel size, offset and unitdm_handle.getSlice
-        metaData['PhysicalSizeX'] = metaData['Calibrations.Dimension.1.Scale']
-        metaData['PhysicalSizeXOrigin'] = metaData['Calibrations.Dimension.1.Origin']
-        metaData['PhysicalSizeXUnit'] = metaData['Calibrations.Dimension.1.Units']
-        metaData['PhysicalSizeY'] = metaData['Calibrations.Dimension.2.Scale']
-        metaData['PhysicalSizeYOrigin'] = metaData['Calibrations.Dimension.2.Origin']
-        metaData['PhysicalSizeYUnit'] = metaData['Calibrations.Dimension.2.Units']
+        try:
+            metaData['PhysicalSizeX'] = metaData['Calibrations.Dimension.1.Scale']
+            metaData['PhysicalSizeXOrigin'] = metaData['Calibrations.Dimension.1.Origin']
+            metaData['PhysicalSizeXUnit'] = metaData['Calibrations.Dimension.1.Units']
+            metaData['PhysicalSizeY'] = metaData['Calibrations.Dimension.2.Scale']
+            metaData['PhysicalSizeYOrigin'] = metaData['Calibrations.Dimension.2.Origin']
+            metaData['PhysicalSizeYUnit'] = metaData['Calibrations.Dimension.2.Units']
+        except:
+            metaData['PhysicalSizeX'] = 1
+            metaData['PhysicalSizeXOrigin'] = 0
+            metaData['PhysicalSizeXUnit'] = ''
+            metaData['PhysicalSizeY'] = 1
+            metaData['PhysicalSizeYOrigin'] = 0
+            metaData['PhysicalSizeYUnit'] = ''
 
         metaData['FileName'] = path
 
