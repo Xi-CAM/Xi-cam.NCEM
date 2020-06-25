@@ -183,10 +183,10 @@ def _metadata_from_dset(path, dset_num=0):  # parameterized by path rather than 
     try:
         metaData['PhysicalSizeX'] = dimX[0][1] - dimX[0][0]
         metaData['PhysicalSizeXOrigin'] = dimX[0][0]
-        metaData['PhysicalSizeXUnit'] = dimX[2]
+        metaData['PhysicalSizeXUnit'] = dimX[2].replace('_', '')
         metaData['PhysicalSizeY'] = dimY[0][1] - dimY[0][0]
         metaData['PhysicalSizeYOrigin'] = dimY[0][0]
-        metaData['PhysicalSizeYUnit'] = dimY[2]
+        metaData['PhysicalSizeYUnit'] = dimY[2].replace('_', '')
         # metaData['PhysicalSizeZ'] = dimZ[0][1] - dimZ[0][0]
         # metaData['PhysicalSizeZOrigin'] = dimZ[0][0]
         # metaData['PhysicalSizeZUnit'] = dimZ[2]
@@ -327,7 +327,6 @@ def _metadata_velox(path):  # parameterized by path rather than emd_obj so that 
         metaData['PhysicalSizeXUnit'] = mDataS['BinaryResult']['PixelUnitX']
         metaData['PhysicalSizeY'] = float(mDataS['BinaryResult']['PixelSize']['height'])
         metaData['PhysicalSizeYOrigin'] = float(mDataS['BinaryResult']['Offset']['y'])
-        metaData['PhysicalSizeYUnit'] = mDataS['BinaryResult']['PixelUnitY']
     except:
         metaData['PhysicalSizeX'] = 1
         metaData['PhysicalSizeXOrigin'] = 0

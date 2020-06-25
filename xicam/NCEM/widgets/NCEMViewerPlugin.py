@@ -34,18 +34,21 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
         if catalog:
             self.setCatalog(catalog, stream=stream, field=field)
 
-        start_doc = getattr(self.catalog, self.stream).metadata['start']
-
-        if 'PhysicalSizeX' in start_doc:
+        #start_doc = getattr(self.catalog, self.stream).metadata['start']
+        config = getattr(self.catalog, self.stream).metadata['descriptors'][0]['configuration']
+        if 'PhysicalSizeX' in config:
             #  Retrieve the metadata for pixel scale and units
-            scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
-            units0 = (start_doc['PhysicalSizeXUnit'], start_doc['PhysicalSizeYUnit'])
+            scale0 = (config['PhysicalSizeX']['data']['PhysicalSizeX'],
+                      config['PhysicalSizeY']['data']['PhysicalSizeY'])
+            units0 = (config['PhysicalSizeXUnit']['data']['PhysicalSizeXUnit'],
+                      config['PhysicalSizeYUnit']['data']['PhysicalSizeYUnit'])
         else:
             scale0 = (1, 1)
             units0 = ('', '')
             msg.logMessage('NCEMviewer: No pixel size or units detected')
 
         # Only way to set scale on the ImageView is to set the image again
+        print(scale0)
         self.setImage(self.xarray, scale=scale0)
 
         self.axesItem.setLabel('bottom', text='X', units=units0[0])
