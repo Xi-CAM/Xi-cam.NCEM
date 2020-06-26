@@ -29,8 +29,8 @@ def _metadata(path):
     if im.is_imagej:
         xres_value = im.pages[0].tags['XResolution'].value
         yres_value = im.pages[0].tags['YResolution'].value
-        xres = xres_value[0] / xres_value[1]
-        yres = yres_value[0] / yres_value[1]
+        xres = xres_value[1] / xres_value[0]
+        yres = yres_value[1] / yres_value[0]
 
         units = im.imagej_metadata['unit']
     else:
