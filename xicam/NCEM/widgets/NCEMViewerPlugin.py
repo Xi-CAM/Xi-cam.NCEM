@@ -34,18 +34,19 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
         if catalog:
             self.setCatalog(catalog, stream=stream, field=field)
 
-        #start_doc = getattr(self.catalog, self.stream).metadata['start']
-        config = getattr(self.catalog, self.stream).metadata['descriptors'][0]['configuration']
-        if 'PhysicalSizeX' in config:
-            #  Retrieve the metadata for pixel scale and units
-            scale0 = (config['PhysicalSizeX']['data']['PhysicalSizeX'],
-                      config['PhysicalSizeY']['data']['PhysicalSizeY'])
-            units0 = (config['PhysicalSizeXUnit']['data']['PhysicalSizeXUnit'],
-                      config['PhysicalSizeYUnit']['data']['PhysicalSizeYUnit'])
-        else:
-            scale0 = (1, 1)
-            units0 = ('', '')
-            msg.logMessage('NCEMviewer: No pixel size or units detected')
+        # start_doc = getattr(self.catalog, self.stream).metadata['start']
+        # config = getattr(self.catalog, self.stream).metadata['descriptors'][0]['configuration']
+        # if 'PhysicalSizeX' in config:
+        #     #  Retrieve the metadata for pixel scale and units
+        #     scale0 = (config['PhysicalSizeX']['data']['PhysicalSizeX'],
+        #               config['PhysicalSizeY']['data']['PhysicalSizeY'])
+        #     units0 = (config['PhysicalSizeXUnit']['data']['PhysicalSizeXUnit'],
+        #               config['PhysicalSizeYUnit']['data']['PhysicalSizeYUnit'])
+        # else:
+        #     scale0 = (1, 1)
+        #     units0 = ('', '')
+        #     msg.logMessage('NCEMviewer: No pixel size or units detected')
+        scale0, units0 = self._get_physical_size()
 
         # Only way to set scale on the ImageView is to set the image again
         print(scale0)
@@ -53,6 +54,27 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
 
         self.axesItem.setLabel('bottom', text='X', units=units0[0])
         self.axesItem.setLabel('left', text='Y', units=units0[1])
+
+    def _get_physical_size(self):
+        start_doc = getattr(self.catalog, self.stream).metadata['start']
+        config = getattr(self.catalog, self.stream).metadata['descriptors'][0]['configuration']
+        try:
+            if 'PhysicalSizeX' in config:
+                #  Retrieve the metadata for pixel scale and units
+                scale0 = (config['PhysicalSizeX']['data']['PhysicalSizeX'],
+                          config['PhysicalSizeY']['data']['PhysicalSizeY'])
+                units0 = (config['PhysicalSizeXUnit']['data']['PhysicalSizeXUnit'],
+                          config['PhysicalSizeYUnit']['data']['PhysicalSizeYUnit'])
+            elif 'PhysicalSizeX' in start_doc:
+                scale0 = (start_doc['PhysicalSizeX'],
+                          start_doc['PhysicalSizeY'])
+                units0 = (start_doc['PhysicalSizeXUnit'],
+                          start_doc['PhysicalSizeYUnit'])
+        except:
+            scale0 = (1, 1)
+            units0 = ('', '')
+            msg.logMessage('NCEMviewer: No pixel size or units detected')
+        return scale0, units0
 
     def export(self):
         from tifffile import imsave
@@ -74,24 +96,21 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
         if fd.exec_():
             file_names = fd.selectedFiles()[0]
             outPath = Path(file_names)
+        else:
+            return
 
         if outPath.suffix != '.tif':
             outPath = outPath.with_suffix('.tif')
 
-        config = getattr(self.catalog, self.stream).metadata['descriptors'][0]['configuration']
-        if 'PhysicalSizeX' in config:
-            #  Retrieve the metadata for pixel scale and units
-            scale0 = (config['PhysicalSizeX']['data']['PhysicalSizeX'],
-                      config['PhysicalSizeY']['data']['PhysicalSizeY'])
-            units0 = (config['PhysicalSizeXUnit']['data']['PhysicalSizeXUnit'],
-                      config['PhysicalSizeYUnit']['data']['PhysicalSizeYUnit'])
-        else:
-            scale0 = (1, 1)
-            units0 = ('', '')
-            msg.logMessage('NCEMviewer: No pixel size or units detected')
+        scale0, units0 = self._get_physical_size()
+
+        # Avoid overflow in field of view later
+        if units0[0] == 'm':
+            units0 = ['um', 'um']
+            scale0 = [ii * 1e6 for ii in scale0]
 
         # Change scale from pixel to 1/pixel
-        scale0 = [1/ii for ii in scale0]
+        FOV = [1/ii for ii in scale0]
 
         # Add units to metadata for Imagej type output
         metadata = {'unit': units0[0]}
@@ -99,4 +118,4 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
         # Get the data and change to float
         image = self.xarray[self.currentIndex, :, :].astype('f')
 
-        imsave(outPath, image, imagej=True, resolution=scale0, metadata=metadata)
+        imsave(outPath, image, imagej=True, resolution=FOV, metadata=metadata)

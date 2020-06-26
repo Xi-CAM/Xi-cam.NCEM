@@ -327,6 +327,7 @@ def _metadata_velox(path):  # parameterized by path rather than emd_obj so that 
         metaData['PhysicalSizeXUnit'] = mDataS['BinaryResult']['PixelUnitX']
         metaData['PhysicalSizeY'] = float(mDataS['BinaryResult']['PixelSize']['height'])
         metaData['PhysicalSizeYOrigin'] = float(mDataS['BinaryResult']['Offset']['y'])
+        metaData['PhysicalSizeYUnit'] = mDataS['BinaryResult']['PixelUnitY']
     except:
         metaData['PhysicalSizeX'] = 1
         metaData['PhysicalSizeXOrigin'] = 0

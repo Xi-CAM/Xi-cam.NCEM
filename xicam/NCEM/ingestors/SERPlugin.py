@@ -90,7 +90,7 @@ def ingest_NCEM_SER(paths):
     start_doc["sample_name"] = Path(paths[0]).resolve().stem
     yield 'start', start_doc
 
-    ser_handle = ser.fileSER(path)
+    #ser_handle = ser.fileSER(path)
     num_t = _num_t(metadata)
     first_frame = _get_slice(path, 0)
     shape = first_frame.shape
