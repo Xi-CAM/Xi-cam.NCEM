@@ -78,16 +78,13 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
         if outPath.suffix != '.tif':
             outPath = outPath.with_suffix('.tif')
 
-        if 'PhysicalSizeX' in start_doc:
+        config = getattr(self.catalog, self.stream).metadata['descriptors'][0]['configuration']
+        if 'PhysicalSizeX' in config:
             #  Retrieve the metadata for pixel scale and units
-            units0 = (start_doc['PhysicalSizeXUnit'], start_doc['PhysicalSizeYUnit'])
-            scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
-
-            # Change to nanometers if meters (for SER files)
-            if units0[0] == 'm':
-                units0 = ('nm', 'nm')
-                scale0 = [ii*1e9 for ii in scale0]
-
+            scale0 = (config['PhysicalSizeX']['data']['PhysicalSizeX'],
+                      config['PhysicalSizeY']['data']['PhysicalSizeY'])
+            units0 = (config['PhysicalSizeXUnit']['data']['PhysicalSizeXUnit'],
+                      config['PhysicalSizeYUnit']['data']['PhysicalSizeYUnit'])
         else:
             scale0 = (1, 1)
             units0 = ('', '')
