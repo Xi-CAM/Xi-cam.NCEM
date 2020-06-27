@@ -37,14 +37,12 @@ def _num_t(metadata):
 
 @functools.lru_cache(maxsize=10, typed=False)
 def _metadata(path):
-    with ser.fileSER(path, emifile=False) as ser1:
+    with ser.fileSER(path) as ser1:
         data, metaData = ser1.getDataset(0)  # have to get 1 image and its meta data
 
-        # Get extra meta data from the EMI file if it exists
-        emifile = path[:-6] + '.emi'
-        if os.path.exists(emifile):
-            _emi = ser1.read_emi(emifile)
-            metaData.update(_emi)
+        # Add extra meta data from the EMI file if it exists
+        if ser1._emi is not None:
+            metaData.update(ser1._emi)
 
     metaData.update(ser1.head)  # some header data for the ser file
 

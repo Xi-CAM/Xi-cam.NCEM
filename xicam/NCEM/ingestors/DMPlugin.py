@@ -80,7 +80,7 @@ def _metadata(path):
                 elif jj.find('Device.Parameters') > -1:
                     del metaData[jj]
 
-        # Store the X and Y pixel size, offset and unitdm_handle.getSlice
+        # Store the X and Y pixel size, offset and unit
         try:
             metaData['PhysicalSizeX'] = metaData['Calibrations.Dimension.1.Scale']
             metaData['PhysicalSizeXOrigin'] = metaData['Calibrations.Dimension.1.Origin']
@@ -107,7 +107,8 @@ def ingest_NCEM_DM(paths):
 
     # Compose run start
     run_bundle = event_model.compose_run()  # type: event_model.ComposeRunBundle
-    start_doc = run_bundle.start_doc
+    start_doc = _metadata(path)
+    start_doc.update(run_bundle.start_doc)
     start_doc["sample_name"] = Path(paths[0]).resolve().stem
     yield 'start', start_doc
 

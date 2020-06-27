@@ -74,6 +74,7 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
             scale0 = (1, 1)
             units0 = ('', '')
             msg.logMessage('NCEMviewer: No pixel size or units detected')
+
         return scale0, units0
 
     def export(self):
