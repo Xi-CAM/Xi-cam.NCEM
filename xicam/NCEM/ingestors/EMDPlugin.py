@@ -364,7 +364,8 @@ def ingest_NCEM_EMD_VELOX(paths):
     shape = first_frame.shape
     dtype = first_frame.dtype
 
-    dask_data = da.stack([da.from_delayed(dask.delayed(_get_slice_velox)(emd_handle, t), shape=shape, dtype=dtype)
+    delayed_get_slice = dask.delayed(_get_slice_velox)
+    dask_data = da.stack([da.from_delayed(delayed_get_slice(emd_handle, t), shape=shape, dtype=dtype)
                           for t in range(num_t)])
 
     # Compose descriptor
