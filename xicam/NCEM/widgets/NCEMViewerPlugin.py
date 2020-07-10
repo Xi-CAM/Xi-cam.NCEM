@@ -9,7 +9,7 @@ from xicam.gui.widgets.imageviewmixins import CatalogView, FieldSelector, Stream
 from .ncemimageview import NCEMImageView
 
 
-class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButtons, NCEMImageView, DynImageView,
+class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButtons,
                        CatalogView, QWidget):
 
     def __init__(self, catalog, stream: str = 'primary', field: str = 'raw',
