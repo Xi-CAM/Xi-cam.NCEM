@@ -19,5 +19,5 @@ class NCEMImageView(DynImageView):
         sl = [slice(None)] * data.ndim
         sl[ax] = slice(None, None, max(1, int(data.size // 1e6)))
         data = data[sl]
-        return (np.nanpercentile(np.where(data > np.nanmin(data), data, np.nanmax(data)), .1),
-                np.nanpercentile(np.where(data < np.nanmax(data), data, np.nanmin(data)), 99.1))
+        return [(np.nanpercentile(np.where(data > np.nanmin(data), data, np.nanmax(data)), .1),
+                np.nanpercentile(np.where(data < np.nanmax(data), data, np.nanmin(data)), 99.1))]
