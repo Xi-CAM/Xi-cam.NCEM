@@ -14,8 +14,9 @@ from xicam.gui.widgets.tabview import TabView
 from .patches import pyqtgraph_export
 from .patches import pyqtgraph_tiffexporter
 from . import ingestors  # necessary unused import; registers mimetypes
+from xicam.gui.widgets.metadataview import MetadataView
 
-from xicam.NCEM.ingestors import DMPlugin
+from .ingestors import DMPlugin
 
 
 class NCEMPlugin(GUIPlugin):
@@ -36,12 +37,12 @@ class NCEMPlugin(GUIPlugin):
 
         #self.fourDview = TabView(self.headermodel, self.selectionmodel, widgets.FourDImageView, 'primary')
 
-        # self.metadataview = MetadataView(self.catalogModel, self.selectionmodel, excludedkeys=('uid','descriptor','data'))
+        self.metadataview = MetadataView(self.catalogModel, self.selectionmodel, excludedkeys=('uid','descriptor','data'))
 
         # self.toolbar = widgets.NCEMToolbar(self.catalogModel, self.selectionmodel)
 
         self.stages = {
-            'View': GUILayout(self.rawview, ),  # top=self.toolbar, )#right=self.metadataview),
+            'View': GUILayout(self.rawview, right=self.metadataview ),  # top=self.toolbar, )),
             # 'View': GUILayout(self.rawview, top=self.toolbar),
             # '4D STEM': GUILayout(self.fourDview, ),
             'FFT View': GUILayout(self.fftview, )
