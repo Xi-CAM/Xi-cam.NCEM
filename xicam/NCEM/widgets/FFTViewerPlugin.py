@@ -58,6 +58,7 @@ class FFTViewerPlugin(QWidgetPlugin):
         # Initialize real space ROI size
         start_doc = self.Rimageview.catalog.metadata['start']
 
+        # TODO: Change to Pixel size function from NCEMViewerplugin
         if 'PhysicalSizeX' in start_doc:
             #  Retrieve the metadata for pixel scale and units
             scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
@@ -80,6 +81,7 @@ class FFTViewerPlugin(QWidgetPlugin):
         try:
             data = self.Rimageview.imageItem.image
 
+            # TODO: Change to Pixel size function from NCEMViewerplugin
             #start_doc = getattr(self.Rimageview.catalog, self.stream).metadata['start']
             start_doc = self.Rimageview.catalog.metadata['start']
             # Get the pixel size
