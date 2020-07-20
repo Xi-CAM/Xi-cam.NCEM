@@ -37,7 +37,10 @@ def _metadata(path):
 
     if hasattr(mrc1, 'FEIinfo'):
         # add in the special FEIinfo if it exists
-        metaData.update(mrc1.FEIinfo)
+        try:
+            metaData.update(mrc1.FEIinfo)
+        except TypeError:
+            pass
 
     # Store the X and Y pixel size, offset and unit
     # Test for bad pixel sizes which happens often
