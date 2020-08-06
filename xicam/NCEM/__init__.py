@@ -4,19 +4,13 @@ from qtpy.QtGui import *
 
 from databroker.core import BlueskyRun
 
-from xicam.core.data import NonDBHeader
-
 from xicam.plugins import GUIPlugin, GUILayout
 from . import widgets
 
 from xicam.gui.widgets.tabview import TabView
 
-from .patches import pyqtgraph_export
-from .patches import pyqtgraph_tiffexporter
 from . import ingestors  # necessary unused import; registers mimetypes
 from xicam.gui.widgets.metadataview import MetadataView
-
-from .ingestors import DMPlugin
 
 
 class NCEMPlugin(GUIPlugin):

@@ -29,8 +29,8 @@ def _metadata(path):
     if im.is_imagej:
         xres_value = im.pages[0].tags['XResolution'].value
         yres_value = im.pages[0].tags['YResolution'].value
-        xres = xres_value[0] / xres_value[1]
-        yres = yres_value[0] / yres_value[1]
+        xres = xres_value[1] / xres_value[0]
+        yres = yres_value[1] / yres_value[0]
 
         units = im.imagej_metadata['unit']
     else:
@@ -39,12 +39,20 @@ def _metadata(path):
         units = ''
 
     # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = xres
-    metaData['PhysicalSizeXOrigin'] = 0
-    metaData['PhysicalSizeXUnit'] = units
-    metaData['PhysicalSizeY'] = yres
-    metaData['PhysicalSizeYOrigin'] = 0
-    metaData['PhysicalSizeYUnit'] = units
+    try:
+        metaData['PhysicalSizeX'] = xres
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = units
+        metaData['PhysicalSizeY'] = yres
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = units
+    except:
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     return metaData
 
@@ -96,18 +104,3 @@ def ingest_NCEM_TIF(paths):
                                                      timestamps={'raw': time.time()})
 
     yield 'stop', run_bundle.compose_stop()
-
-
-if __name__ == "__main__":
-    import numpy as np
-    import tempfile
-
-    # Write a small TIF file
-    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
-    dd = dd.astype('<u2')
-
-    tmp = tempfile.TemporaryDirectory()
-    fPath = Path(tmp.name) / Path('temp_tif.tif')
-
-    tifffile.imsave(fPath, dd, imagej=True, resolution=(0.2, 0.2), metadata={'unit': 'um'})
-    print(list(ingest_NCEM_TIF([str(fPath)])))

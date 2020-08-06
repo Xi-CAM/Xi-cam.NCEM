@@ -6,7 +6,7 @@ from qtpy.QtWidgets import *
 from xicam.plugins import QWidgetPlugin
 from xicam.core import msg
 from .NCEMViewerPlugin import NCEMViewerPlugin
-from .ncemimageview import NCEMImageView
+from .ncemimageview import NCEMFFTView
 
 
 class FFTViewerPlugin(QWidgetPlugin):
@@ -20,7 +20,7 @@ class FFTViewerPlugin(QWidgetPlugin):
 
         # Two NCEM image views
         self.Rimageview = NCEMViewerPlugin(catalog)
-        self.Fimageview = NCEMImageView()
+        self.Fimageview = NCEMFFTView()
 
         # Keep Y-axis as is
         self.Rimageview.view.invertY(True)
@@ -58,6 +58,7 @@ class FFTViewerPlugin(QWidgetPlugin):
         # Initialize real space ROI size
         start_doc = self.Rimageview.catalog.metadata['start']
 
+        # TODO: Change to Pixel size function from NCEMViewerplugin
         if 'PhysicalSizeX' in start_doc:
             #  Retrieve the metadata for pixel scale and units
             scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
@@ -80,6 +81,7 @@ class FFTViewerPlugin(QWidgetPlugin):
         try:
             data = self.Rimageview.imageItem.image
 
+            # TODO: Change to Pixel size function from NCEMViewerplugin
             #start_doc = getattr(self.Rimageview.catalog, self.stream).metadata['start']
             start_doc = self.Rimageview.catalog.metadata['start']
             # Get the pixel size
@@ -97,7 +99,8 @@ class FFTViewerPlugin(QWidgetPlugin):
             dataSlice = data[int(y / scale0[1]):int((y + h) / scale0[1]), int(x / scale0[0]):int((x + w) / scale0[0])]
 
             fft = np.fft.fft2(dataSlice)
-            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1))  # , autoLevels = self.autoLevels)
+            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1)) #, autoLevels = self.autoLevels)
+
             self.autoLevels = False
             self.Rroi.setPen(pg.mkPen('w'))
         except ValueError:

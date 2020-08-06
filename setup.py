@@ -14,7 +14,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.0',
+    version='0.1.1',
 
     description='The CAMERA platform for synchrotron data management, visualization, and reduction. The xicam.gui '
                 'package contains all gui code of the Xi-cam platform, as part of the xicam namespace package. For the '
@@ -67,7 +67,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['ncempy>=1.3.0', 'tifffile', 'dask', 'numpy'],
+    install_requires=['ncempy>=1.6.0', 'tifffile', 'dask', 'numpy', 'databroker', 'qtpy'],
 
     setup_requires=[],
 

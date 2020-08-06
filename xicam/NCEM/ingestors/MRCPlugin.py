@@ -37,15 +37,29 @@ def _metadata(path):
 
     if hasattr(mrc1, 'FEIinfo'):
         # add in the special FEIinfo if it exists
-        metaData.update(mrc1.FEIinfo)
+        try:
+            metaData.update(mrc1.FEIinfo)
+        except TypeError:
+            pass
 
     # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = mrc1.voxelSize[2] * 1e-10  # change Angstroms to meters
-    metaData['PhysicalSizeXOrigin'] = 0
-    metaData['PhysicalSizeXUnit'] = 'm'
-    metaData['PhysicalSizeY'] = mrc1.voxelSize[1] * 1e-10  # change Angstroms to meters
-    metaData['PhysicalSizeYOrigin'] = 0
-    metaData['PhysicalSizeYUnit'] = 'm'
+    # Test for bad pixel sizes which happens often
+    if mrc1.voxelSize[2] > 0:
+        metaData['PhysicalSizeX'] = mrc1.voxelSize[2] * 1e-10  # change Angstroms to meters
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = 'm'
+    else:
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+    if mrc1.voxelSize[1] > 0:
+        metaData['PhysicalSizeY'] = mrc1.voxelSize[1] * 1e-10  # change Angstroms to meters
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = 'm'
+    else:
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     metaData['FileName'] = path
 
@@ -119,20 +133,3 @@ def ingest_NCEM_MRC(paths):
                                                      timestamps={'raw': time.time()})
 
     yield 'stop', run_bundle.compose_stop()
-
-
-if __name__ == "__main__":
-    import tempfile
-    import numpy as np
-
-    # Write a small MRC file
-    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
-    dd = dd.astype('<u2')
-
-    tmp = tempfile.TemporaryDirectory()
-    fPath = Path(tmp.name) / Path('temp_mrc.mrc')
-
-    mrc.mrcWriter(str(fPath), dd, (0.1, 0.2, 0.3))
-
-    print(list(ingest_NCEM_MRC([str(fPath)])))
-

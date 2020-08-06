@@ -174,17 +174,29 @@ def _metadata_from_dset(path, dset_num=0):  # parameterized by path rather than 
         dimZ = dims[1]
         dimY = dims[2]  # dataGroup['dim3']
         dimX = dims[3]  # dataGroup['dim4']
+    else:
+        dimZ = None
+        dimY = None
+        dimX = None
 
     # Store the X and Y pixel size, offset and unit
-    metaData['PhysicalSizeX'] = dimX[0][1] - dimX[0][0]
-    metaData['PhysicalSizeXOrigin'] = dimX[0][0]
-    metaData['PhysicalSizeXUnit'] = dimX[2]
-    metaData['PhysicalSizeY'] = dimY[0][1] - dimY[0][0]
-    metaData['PhysicalSizeYOrigin'] = dimY[0][0]
-    metaData['PhysicalSizeYUnit'] = dimY[2]
-    # metaData['PhysicalSizeZ'] = dimZ[0][1] - dimZ[0][0]
-    # metaData['PhysicalSizeZOrigin'] = dimZ[0][0]
-    # metaData['PhysicalSizeZUnit'] = dimZ[2]
+    try:
+        metaData['PhysicalSizeX'] = dimX[0][1] - dimX[0][0]
+        metaData['PhysicalSizeXOrigin'] = dimX[0][0]
+        metaData['PhysicalSizeXUnit'] = dimX[2].replace('_', '')
+        metaData['PhysicalSizeY'] = dimY[0][1] - dimY[0][0]
+        metaData['PhysicalSizeYOrigin'] = dimY[0][0]
+        metaData['PhysicalSizeYUnit'] = dimY[2].replace('_', '')
+        # metaData['PhysicalSizeZ'] = dimZ[0][1] - dimZ[0][0]
+        # metaData['PhysicalSizeZOrigin'] = dimZ[0][0]
+        # metaData['PhysicalSizeZUnit'] = dimZ[2]
+    except:
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     metaData['shape'] = dataset0.shape
 
@@ -317,8 +329,12 @@ def _metadata_velox(path):  # parameterized by path rather than emd_obj so that 
         metaData['PhysicalSizeYOrigin'] = float(mDataS['BinaryResult']['Offset']['y'])
         metaData['PhysicalSizeYUnit'] = mDataS['BinaryResult']['PixelUnitY']
     except:
-        msg.logMessage('EMD: Velox metadata parsing failed.')
-        raise
+        metaData['PhysicalSizeX'] = 1
+        metaData['PhysicalSizeXOrigin'] = 0
+        metaData['PhysicalSizeXUnit'] = ''
+        metaData['PhysicalSizeY'] = 1
+        metaData['PhysicalSizeYOrigin'] = 0
+        metaData['PhysicalSizeYUnit'] = ''
 
     metaData.update(mDataS)
 
@@ -348,7 +364,8 @@ def ingest_NCEM_EMD_VELOX(paths):
     shape = first_frame.shape
     dtype = first_frame.dtype
 
-    dask_data = da.stack([da.from_delayed(dask.delayed(_get_slice_velox)(emd_handle, t), shape=shape, dtype=dtype)
+    delayed_get_slice = dask.delayed(_get_slice_velox)
+    dask_data = da.stack([da.from_delayed(delayed_get_slice(emd_handle, t), shape=shape, dtype=dtype)
                           for t in range(num_t)])
 
     # Compose descriptor
@@ -384,33 +401,23 @@ def emd_sniffer(path, first_bytes):
     if not Path(path).suffix.lower() == '.emd':
         return
 
+    test_velox = False
     try:
-        emd1 = emd.fileEMD(path, readonly=True)
-        dataset0 = emd1.list_emds[0]['data']  # get the dataset in the first group found
-        return 'application/x-EMD'
-    except IndexError:
-        # Assume its a Velox
-        return 'application/x-EMD-VELOX'
+        # Test for Berkeley EMD
+        with emd.fileEMD(path, readonly=True) as emd1:
+            if len(emd1.list_emds) > 0:
+                return 'application/x-EMD'
+            else:
+                test_velox = True
+    except OSError:
+        # Not a HDF5 file
+        return
 
-
-if __name__ == "__main__":
-    import tempfile
-
-    # Write a small Berkeley EMD file
-    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
-    dd = dd.astype('<u2')
-
-    tmp = tempfile.TemporaryDirectory()
-    fPath = Path(tmp.name) / Path('temp_emd_berkeley.emd')
-
-    if fPath.exists():
-        fPath.unlink()
-
-    print(fPath)
-
-    with emd.fileEMD(fPath.as_posix(), readonly=False) as f0:
-        dims = emd.defaultDims(dd)
-        f0.put_emdgroup('test', dd, dims)
-
-    print(list(ingest_NCEM_EMD([str(fPath)])))
-    # print(list(ingest_NCEM_EMD(["/home/rp/data/NCEM/twoDatasets.emd"])))
+    if test_velox:
+        # Test for Velox
+        with emdVelox.fileEMDVelox(path) as emd2:
+            ver = emd2.file_hdl['Version'][0].decode('ASCII')
+            if ver.find('Velox') > -1:
+                return 'application/x-EMD-VELOX'
+    else:
+        return
