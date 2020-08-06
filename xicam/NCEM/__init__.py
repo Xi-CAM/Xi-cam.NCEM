@@ -11,8 +11,6 @@ from . import widgets
 
 from xicam.gui.widgets.tabview import TabView
 
-from .patches import pyqtgraph_export
-from .patches import pyqtgraph_tiffexporter
 from . import ingestors  # necessary unused import; registers mimetypes
 from xicam.gui.widgets.metadataview import MetadataView
 
