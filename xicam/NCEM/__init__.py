@@ -4,7 +4,7 @@ from qtpy.QtGui import *
 
 from databroker.core import BlueskyRun
 
-from xicam.core.data import NonDBHeader
+#from xicam.core.data import NonDBHeader
 
 from xicam.plugins import GUIPlugin, GUILayout
 from . import widgets
