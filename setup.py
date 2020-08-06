@@ -14,7 +14,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.0',
+    version='0.1.1',
 
     description='The CAMERA platform for synchrotron data management, visualization, and reduction. The xicam.gui '
                 'package contains all gui code of the Xi-cam platform, as part of the xicam namespace package. For the '
