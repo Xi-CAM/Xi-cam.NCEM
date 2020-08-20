@@ -67,7 +67,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['ncempy>=1.6.0', 'tifffile', 'dask', 'numpy', 'databroker', 'qtpy'],
+    install_requires=['ncempy>=1.6.0', 'tifffile', 'dask', 'numpy', 'databroker', 'qtpy', 'pyqtgraph'],
 
     setup_requires=[],
 
