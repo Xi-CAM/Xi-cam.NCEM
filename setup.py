@@ -6,7 +6,7 @@ Usage: pip install -e .
        twine upload dist/*
 """
 
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 
 setup(
     name='xicam.NCEM',
@@ -14,18 +14,16 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.1',
+    version='0.1.3',
 
-    description='The CAMERA platform for synchrotron data management, visualization, and reduction. The xicam.gui '
-                'package contains all gui code of the Xi-cam platform, as part of the xicam namespace package. For the '
-                'backend components, see "xicam.core".',
+    description='A Xi-CAM plugin for viewing NCEM data.',
 
     # The project's main homepage.
-    url='https://github.com/ronpandolfi/Xi-cam',
+    url='https://github.com/Xi-CAM/Xi-CAM.NCEM',
 
     # Author details
-    author='Ronald J Pandolfi',
-    author_email='ronpandolfi@lbl.gov',
+    author='Peter Ercius',
+    author_email='percius@lbl.gov',
 
     # Choose your license
     license='BSD',
@@ -55,7 +53,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['xicam.NCEM', 'xicam.NCEM.widgets'],
+    packages=find_namespace_packages(exclude=["docs", "tests*"]),
 
     package_dir={},
 
@@ -83,7 +81,7 @@ setup(
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
-    package_data={'xicam.NCEM': ['*.yapsy-plugin', '*.yml']},
+    package_data={},
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
