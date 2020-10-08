@@ -20,8 +20,8 @@ class NCEMImageView(DynImageView):
         sl = [slice(None)] * data.ndim
         sl[ax] = slice(None, None, max(1, int(data.size // 1e6)))
         data = data[tuple(sl)]
-        return (np.nanpercentile(np.where(data > np.nanmin(data), data, np.nanmax(data)), .1),
-                np.nanpercentile(np.where(data < np.nanmax(data), data, np.nanmin(data)), 99.9))
+        return [(np.nanpercentile(np.where(data > np.nanmin(data), data, np.nanmax(data)), .1),
+                np.nanpercentile(np.where(data < np.nanmax(data), data, np.nanmin(data)), 99.9))]
 
 
 class NCEMFFTView(DynImageView):
@@ -39,5 +39,5 @@ class NCEMFFTView(DynImageView):
         sl = [slice(None)] * data.ndim
         sl[ax] = slice(None, None, max(1, int(data.size // 1e6)))
         data = data[tuple(sl)]
-        return (np.nanpercentile(np.where(data > np.nanmin(data), data, np.nanmax(data)), .5),
-                np.nanpercentile(np.where(data < np.nanmax(data), data, np.nanmin(data)), 99.9))
+        return [(np.nanpercentile(np.where(data > np.nanmin(data), data, np.nanmax(data)), .1),
+                np.nanpercentile(np.where(data < np.nanmax(data), data, np.nanmin(data)), 99.9))]
