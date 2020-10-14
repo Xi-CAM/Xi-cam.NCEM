@@ -1,6 +1,7 @@
 from pathlib import Path
+import numpy as np
 
-from pyqtgraph import PlotItem
+#from pyqtgraph import PlotItem
 from qtpy.QtWidgets import *
 
 from xicam.core import msg
@@ -8,7 +9,6 @@ from xicam.core import msg
 from xicam.gui.widgets.imageviewmixins import CatalogView, FieldSelector, StreamSelector, ExportButton, BetterButtons
 #from .ncemimageview import NCEMImageView
 
-import numpy as np
 
 class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButtons,
                        CatalogView, QWidget):
