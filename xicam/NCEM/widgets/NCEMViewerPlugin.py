@@ -8,6 +8,7 @@ from xicam.core import msg
 from xicam.gui.widgets.imageviewmixins import CatalogView, FieldSelector, StreamSelector, ExportButton, BetterButtons
 #from .ncemimageview import NCEMImageView
 
+import numpy as np
 
 class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButtons,
                        CatalogView, QWidget):
@@ -19,29 +20,37 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
         self.field = None
 
         # Add axes
-        self.axesItem = PlotItem()
-        self.axesItem.axes['left']['item'].setZValue(10)
-        self.axesItem.axes['top']['item'].setZValue(10)
-        if 'view' not in kwargs:
-            kwargs['view'] = self.axesItem
+        #self.axesItem = PlotItem()
+        #self.axesItem.axes['left']['item'].setZValue(10)
+        #self.axesItem.axes['top']['item'].setZValue(10)
+        #if 'view' not in kwargs:
+        #    kwargs['view'] = self.axesItem
 
         super(NCEMViewerPlugin, self).__init__(**kwargs)
-        self.axesItem.invertY(False)
-
-        # Use Viridis by default
-        self.setPredefinedGradient("viridis")
-        self.imageItem.setOpts(axisOrder="row-major")
 
         if catalog:
             self.setCatalog(catalog, stream=stream, field=field)
 
+        # Use Viridis by default
+        self.setPredefinedGradient("viridis")
+        #self.imageItem.setOpts(axisOrder="col-major")
+        #self.axesItem.invertY(False)
+
+        # Set the physical scale on the xarray
         scale0, units0 = self._get_physical_size()
 
-        # One way to set scale on the ImageView is to set the image again
-        self.setImage(self.xarray, scale=scale0)
+        self.xarray.coords['dim_1'] = scale0[0] * np.linspace(0, self.xarray.shape[-2] - 1, self.xarray.shape[-2])
+        self.xarray.coords['dim_2'] = scale0[0] * np.linspace(0, self.xarray.shape[-1] - 1, self.xarray.shape[-1])
 
-        self.axesItem.setLabel('bottom', text='X', units=units0[0])
-        self.axesItem.setLabel('left', text='Y', units=units0[1])
+        self.xarray.attrs['units'] = units0[0]
+
+        self.xarray = self.xarray.rename({'dim_1': ''.join(('Y ', units0[0])), 'dim_2': ''.join(('X ', units0[1]))})
+
+        # Set the xarray to get the scale correct
+        self.setImage(self.xarray)
+
+        #self.axesItem.setLabel('bottom', text='X', units=units0[0])
+        #self.axesItem.setLabel('left', text='Y', units=units0[1])
 
     def _get_physical_size(self):
         start_doc = getattr(self.catalog, self.stream).metadata['start']
