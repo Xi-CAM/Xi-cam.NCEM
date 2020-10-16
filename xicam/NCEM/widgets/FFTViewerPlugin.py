@@ -23,8 +23,8 @@ class FFTViewerPlugin(QWidgetPlugin):
         self.Fimageview = NCEMFFTView()
 
         # Keep Y-axis as is
-        self.Rimageview.view.invertY(True)
-        self.Fimageview.view.invertY(True)
+        # self.Rimageview.view.invertY(True)
+        # self.Fimageview.view.invertY(True)
 
         # Add to a layout
         self.setLayout(QHBoxLayout())
