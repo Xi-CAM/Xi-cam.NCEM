@@ -18,16 +18,12 @@ class FFTViewerPlugin(QWidgetPlugin):
 
         super(FFTViewerPlugin, self).__init__(*args, **kwargs)
 
-        # Two NCEM image views
+        # Set up two views
         self.Rimageview = NCEMViewerPlugin(catalog)
         self.Fimageview = NCEMFFTView()
 
         self.Rimageview.imageItem.setOpts(axisOrder="row-major")
         # self.Fimageview.imageItem.setOpts(axisOrder="row-major") # not needed for FFT
-
-        # Keep Y-axis as is
-        # self.Rimageview.view.invertY(True)
-        self.Fimageview.view.invertY(True)  # this is needed for the FFT to be correctly oriented
 
         # Add to a layout
         self.setLayout(QHBoxLayout())
@@ -58,17 +54,6 @@ class FFTViewerPlugin(QWidgetPlugin):
         self.updateFFT()
 
     def initialize_Rroi(self):
-        # Initialize real space ROI size
-        # start_doc = self.Rimageview.catalog.metadata['start']
-
-        # TODO: Change to Pixel size function from NCEMViewerplugin
-        # if 'PhysicalSizeX' in start_doc:
-        #      Retrieve the metadata for pixel scale and units
-            # scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
-        # else:
-        #     scale0 = (1, 1)
-        #     msg.logMessage('FFTviewer: No pixel size or units detected')
-
         scale0, units0 = self.Rimageview._get_physical_size()
 
         # Set the starting position of the real ROI
@@ -84,31 +69,23 @@ class FFTViewerPlugin(QWidgetPlugin):
         """
         # Get the frame data back from Rimageview (applies timeline slicing)
         try:
-            data = self.Rimageview.imageItem.image
-
-            # TODO: Change to Pixel size function from NCEMViewerplugin
-            #start_doc = getattr(self.Rimageview.catalog, self.stream).metadata['start']
-            # start_doc = self.Rimageview.catalog.metadata['start']
-            # Get the pixel size
-            # if 'PhysicalSizeX' in start_doc:
-            #     scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
-                #units0 = (start_doc['PhysicalSizeXUnit'], start_doc['PhysicalSizeYUnit'])
-            # else:
-            #     scale0 = (1, 1)
-                #units0 = ('', '')
-                #msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
+            data = self.Rimageview.imageItem.image[::-1, :]
 
             scale0, units0 = self.Rimageview._get_physical_size()
 
             # Extract the data in the ROI
             x, y = self.Rroi.pos()
             w, h = self.Rroi.size()
+
+            # For testing. Show real space image instead of FFT
+            # dataSlice = data[int(y / scale0[1]):int((y + h) / scale0[1]), int(x / scale0[0]):int((x + w) / scale0[0])]
+            # self.Fimageview.setImage(dataSlice)
+
+            # Unsure of the scale0 order with respect to x,y and w,h
             dataSlice = data[int(y / scale0[1]):int((y + h) / scale0[1]), int(x / scale0[0]):int((x + w) / scale0[0])]
-
             fft = np.fft.fft2(dataSlice)
-            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + 1)) #, autoLevels = self.autoLevels)
+            self.Fimageview.setImage(np.log(np.abs(np.fft.fftshift(fft)) + .001))
 
-            self.autoLevels = False
             self.Rroi.setPen(pg.mkPen('w'))
         except ValueError:
             self.Rroi.setPen(pg.mkPen('r'))
