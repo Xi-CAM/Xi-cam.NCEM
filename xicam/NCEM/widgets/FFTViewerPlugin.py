@@ -22,9 +22,12 @@ class FFTViewerPlugin(QWidgetPlugin):
         self.Rimageview = NCEMViewerPlugin(catalog)
         self.Fimageview = NCEMFFTView()
 
+        self.Rimageview.imageItem.setOpts(axisOrder="row-major")
+        # self.Fimageview.imageItem.setOpts(axisOrder="row-major") # not needed for FFT
+
         # Keep Y-axis as is
         # self.Rimageview.view.invertY(True)
-        # self.Fimageview.view.invertY(True)
+        self.Fimageview.view.invertY(True)  # this is needed for the FFT to be correctly oriented
 
         # Add to a layout
         self.setLayout(QHBoxLayout())
@@ -56,15 +59,17 @@ class FFTViewerPlugin(QWidgetPlugin):
 
     def initialize_Rroi(self):
         # Initialize real space ROI size
-        start_doc = self.Rimageview.catalog.metadata['start']
+        # start_doc = self.Rimageview.catalog.metadata['start']
 
         # TODO: Change to Pixel size function from NCEMViewerplugin
-        if 'PhysicalSizeX' in start_doc:
-            #  Retrieve the metadata for pixel scale and units
-            scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
-        else:
-            scale0 = (1, 1)
-            msg.logMessage('FFTviewer: No pixel size or units detected')
+        # if 'PhysicalSizeX' in start_doc:
+        #      Retrieve the metadata for pixel scale and units
+            # scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
+        # else:
+        #     scale0 = (1, 1)
+        #     msg.logMessage('FFTviewer: No pixel size or units detected')
+
+        scale0, units0 = self.Rimageview._get_physical_size()
 
         # Set the starting position of the real ROI
         sh = self.Rimageview.xarray.shape
@@ -83,15 +88,17 @@ class FFTViewerPlugin(QWidgetPlugin):
 
             # TODO: Change to Pixel size function from NCEMViewerplugin
             #start_doc = getattr(self.Rimageview.catalog, self.stream).metadata['start']
-            start_doc = self.Rimageview.catalog.metadata['start']
+            # start_doc = self.Rimageview.catalog.metadata['start']
             # Get the pixel size
-            if 'PhysicalSizeX' in start_doc:
-                scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
+            # if 'PhysicalSizeX' in start_doc:
+            #     scale0 = (start_doc['PhysicalSizeX'], start_doc['PhysicalSizeY'])
                 #units0 = (start_doc['PhysicalSizeXUnit'], start_doc['PhysicalSizeYUnit'])
-            else:
-                scale0 = (1, 1)
+            # else:
+            #     scale0 = (1, 1)
                 #units0 = ('', '')
                 #msg.logMessage('FFTviewPlugin: No pixel size or units detected.')
+
+            scale0, units0 = self.Rimageview._get_physical_size()
 
             # Extract the data in the ROI
             x, y = self.Rroi.pos()

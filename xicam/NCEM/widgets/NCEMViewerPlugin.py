@@ -36,6 +36,8 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
         #self.imageItem.setOpts(axisOrder="col-major")
         #self.axesItem.invertY(False)
 
+        self.imageItem.setOpts(axisOrder="row-major")
+
         # Set the physical scale on the xarray
         scale0, units0 = self._get_physical_size()
 
