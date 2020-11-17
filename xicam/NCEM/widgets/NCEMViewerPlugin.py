@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
 
-#from pyqtgraph import PlotItem
+from pyqtgraph import InfLineLabel
 from qtpy.QtWidgets import *
 
 from xicam.core import msg
@@ -50,6 +50,10 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
 
         # Set the xarray to get the scale correct
         self.setImage(self.xarray)
+
+        # Set a label on the infinite line if there are more than 20 images
+        if self.xarray.shape[0] > 20:
+            tlabel = InfLineLabel(self.timeLine, text="{value:.0f}")
 
         #self.axesItem.setLabel('bottom', text='X', units=units0[0])
         #self.axesItem.setLabel('left', text='Y', units=units0[1])
