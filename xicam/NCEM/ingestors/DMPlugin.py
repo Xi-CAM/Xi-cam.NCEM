@@ -120,15 +120,19 @@ def ingest_NCEM_DM(paths):
     dtype = first_frame.dtype
 
     delayed_get_slice = dask.delayed(get_slice)
-    dask_data = da.stack([[da.from_delayed(delayed_get_slice(dm_handle, t, z), shape=shape, dtype=dtype)
-                           for z in range(num_z)]
-                          for t in range(num_t)])
+    if num_z > 1:
+        dask_data = da.stack([[da.from_delayed(delayed_get_slice(dm_handle, t, z), shape=shape, dtype=dtype)
+                               for z in range(num_z)]
+                              for t in range(num_t)])
+    else:
+        dask_data = da.stack([da.from_delayed(delayed_get_slice(dm_handle, t, 0), shape=shape, dtype=dtype)
+                               for t in range(num_t)])
 
     # Compose descriptor
     source = 'NCEM'
     frame_data_keys = {'raw': {'source': source,
                                'dtype': 'number',
-                               'shape': (num_t, num_z, *shape)}}
+                               'shape': dask_data.shape}}
     frame_stream_name = 'primary'
     frame_stream_bundle = run_bundle.compose_descriptor(data_keys=frame_data_keys,
                                                         name=frame_stream_name,
