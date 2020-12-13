@@ -1,12 +1,15 @@
+from pathlib import Path
 import pytest
+
+
 from xicam.NCEM.ingestors.DMPlugin import ingest_NCEM_DM
 
 
-# TODO: add fixture that writes temp data file with ncempy for tests
-
 @pytest.fixture
 def DM_path():
-    return "/home/rp/data/NCEM/01_TimeSeriesImages_20images(1).dm3"
+    """DM files must be written from DM."""
+    dPath = Path.home()
+    return str(dPath / Path('data') / Path('01_TimeSeriesImages_20images.dm3'))
 
 
 def test_slicing(DM_path):

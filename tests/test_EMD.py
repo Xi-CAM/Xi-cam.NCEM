@@ -9,26 +9,12 @@ from ncempy.io import emd
 from xicam.NCEM.ingestors.EMDPlugin import ingest_NCEM_EMD, _get_slice
 from databroker.in_memory import BlueskyInMemoryCatalog
 
-# TODO: move file creation to fixture
-
 
 @pytest.fixture
-def EMD_path():
-    """
-    Write a small Berkeley EMD file to a tempfile
-
-    """
-    #return "/home/rp/data/NCEM/Acquisition_18.emd"
-    dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
-    dd = dd.astype('<u2')
-
-    tmp = tempfile.NamedTemporaryFile(mode='wb')
-    tmp.close()  # need to close the file to use it later
-    fPath = str(Path(tmp.name))
-    with emd.fileEMD(fPath, readonly=False) as f0:
-        dims = emd.defaultDims(dd)
-        f0.put_emdgroup('test', dd, dims)
-    return fPath
+def temp_file():
+    tt = tempfile.NamedTemporaryFile(mode='wb')
+    tt.close()  # need to close the file to use it later
+    return Path(tt.name)
 
 
 @pytest.fixture
@@ -54,52 +40,61 @@ def EMD_multi_path():
     return fPath
 
 
-def test_slicing(EMD_path):
-    with emd.fileEMD(EMD_path) as emd_obj:
-        assert _get_slice(emd_obj, 0).shape == (40, 50)
-    docs = list(ingest_NCEM_EMD([EMD_path]))
+def test_slicing(temp_file):
+    dd = np.ones((10, 11, 12), dtype=np.uint16)
+    with emd.fileEMD(temp_file, readonly=False) as emd0:
+        dims = emd.defaultDims(dd)
+        emd0.put_emdgroup('test', dd, dims)
+    with emd.fileEMD(temp_file) as emd_obj:
+        assert _get_slice(emd_obj, 0).shape == (11, 12)
+    docs = list(ingest_NCEM_EMD([str(temp_file)]))
     event_doc = docs[2][1]
     data = event_doc['data']['raw']
-    assert data.shape == (30, 40, 50)
-    assert data[0].compute().shape == (40, 50)
+    assert data.shape == (10, 11, 12)
+    assert data[0].compute().shape == (11, 12)
 
 
-def test_ingest_emd_berkeley(EMD_path):
-
-    # Write a small Berkeley EMD file
-    #dd, _, _ = np.mgrid[0:30, 0:40, 0:50]
-    #dd = dd.astype('<u2')
-    #tmp = tempfile.TemporaryDirectory()
-    #fPath = str(Path(tmp.name) / Path('temp_emd_berkeley.emd'))
-    #with emd.fileEMD(fPath, readonly=False) as f0:
-    #    dims = emd.defaultDims(dd)
-    #    f0.put_emdgroup('test', dd, dims)
+def test_ingest_emd_berkeley(temp_file):
+    dd = np.ones((10, 11, 12), dtype=np.uint16)
+    with emd.fileEMD(temp_file, readonly=False) as emd0:
+        dims = emd.defaultDims(dd)
+        emd0.put_emdgroup('test', dd, dims)
 
     # Test slicing
-    with emd.fileEMD(EMD_path, readonly=True) as emd_obj:
+    with emd.fileEMD(temp_file) as emd_obj:
         dd0 = emd_obj.list_emds[0]['data']
-        assert dd0[0, :, :].shape == (40, 50)
+        assert dd0[0, :, :].shape == (11, 12)
 
     # Test ingest
-    docs = list(ingest_NCEM_EMD([EMD_path]))
+    docs = list(ingest_NCEM_EMD([str(temp_file)]))
     event_doc = docs[2][1]
     data = event_doc['data']['raw']
-    assert data.shape == (30, 40, 50)
-    assert data[0].compute().shape == (40, 50)
+    assert data.shape == (10, 11, 12)
+    assert data[0].compute().shape == (11, 12)
 
 
-def test_multi_device(EMD_multi_path):
-    docs = list(ingest_NCEM_EMD([EMD_multi_path]))
-    #print(docs)
+def test_multi_device(temp_file):
+    dd = np.ones((10, 11, 12), dtype=np.uint16)
+    with emd.fileEMD(temp_file, readonly=False) as emd0:
+        dims = emd.defaultDims(dd)
+        emd0.put_emdgroup('test', dd, dims)
+        # Change shape and write again to simulate a second data set
+        dd2 = dd.reshape(5, 22, 12)
+        dims2 = emd.defaultDims(dd2)
+        emd0.put_emdgroup('test2', dd2, dims2)
+    del dd, dd2, dims, dims2
+
+    # Ingest and get the first data set.
+    docs = list(ingest_NCEM_EMD([str(temp_file)]))
     event_doc = docs[2][1]
     data = event_doc['data']['raw']
-    assert data.shape == (30, 40, 50)
-    assert data[0].compute().shape == (40, 50)
+    assert data.shape == (10, 11, 12)
+    assert data[0].compute().shape == (11, 12)
 
     event_doc = docs[4][1]
     data = event_doc['data']['raw']
-    assert data.shape == (60, 80, 100)
-    assert data[0].compute().shape == (80, 100)
+    assert data.shape == (5, 22, 12)
+    assert data[0].compute().shape == (22, 12)
 
     catalog = BlueskyInMemoryCatalog()
     start = docs[0][1]
