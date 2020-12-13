@@ -31,15 +31,44 @@ The Xi-cam.NCEM plugin implements two types of data viewing
 Installation
 ============
 
-Here are a set of steps to install this program using git, conda, and pip on
-Windows. Installation is currently only supported using source code available at the
-Github repositories. A release is coming soon.
+PIP
+---
 
-1. Clone the unified repository from `XI-CAM <https://github.com/Xi-CAM>`_ on github
+There is now a pip installable package on pypi.org. Simply do:
 
 ::
 
-    git clone https://github.com/Xi-CAM/Xi-cam-unified.git
+    pip install xicam
+    pip insttall xicam.NCEM
+
+Conda
+-----
+
+If you are using conda you can first make a new environment
+
+::
+
+    conda create --name xicam python=3.8 numpy scipy dask jupyter h5py pyqtgraph matplotlib netcdf4 xarray requests astropy numcodecs pyqt intake humanize zarr
+    activate xicam
+
+Then use pip to install xicam and xicam.NCEM
+
+::
+
+    pip install xicam
+    pip insttall xicam.NCEM
+
+From source
+-----------
+
+Here are a set of steps to install this program from source using git, conda, and pip on
+Windows.
+
+1. Clone the Xicam repository from `XI-CAM <https://github.com/Xi-CAM>`_ on github
+
+::
+
+    git clone https://github.com/Xi-CAM/Xi-cam.git
     
 2a. Get the stable `Xi-cam.NCEM <https://github.com/Xi-CAM/Xi-cam.NCEM>`_ plugin from XI-CAM
 
@@ -58,14 +87,14 @@ Github repositories. A release is coming soon.
 
 ::
 
-    conda create --name xicam python=3.7 numpy scipy dask jupyter h5py pyqtgraph matplotlib netcdf4 xarray requests astropy numcodecs pyqt intake humanize zarr
+    conda create --name xicam python=3.8 numpy scipy dask jupyter h5py pyqtgraph matplotlib netcdf4 xarray requests astropy numcodecs pyqt intake humanize zarr
     activate xicam
 
 4. Run the following pip commands from the parent directory of the cloned repositories above.
 
 ::
 
-    pip install -e Xi-cam-unified\\
+    pip install -e Xi-cam\\
     pip install -e Xi-cam.NCEM\\
 
 - Note: Slashes (\\ on windows and / on Linux or Mac) at the end of the line are important to force a local installation rather than downloading from pypi
@@ -112,20 +141,3 @@ Resuming might be possible using
     pyqtRestoreInputHook()
 
 and then pressing CTRL-C to stop the command printing. I have not tried this though.
-
-Logging
-=======
-
-The log directory location was recently moved. Xicam now uses appdirs (from pypi) to determine the location of certainpaths. These are now set in:
-Xi-cam.core\xicam\core\paths.py
-
-On my windows machine the log is now located at:
-
-C:\\Users\\<username>\\AppData\\Local\\xicam\\xicam\\Cache\\logs\\out.log
-
-To determine this location, start python and run the following code:
-
-::
-
-    import appdirs
-    print(appdirs.user_cache_dir())
