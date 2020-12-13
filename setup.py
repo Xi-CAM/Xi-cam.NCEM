@@ -14,7 +14,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.3',
+    version='0.1.4',
 
     description='A Xi-CAM plugin for viewing NCEM data.',
 
@@ -65,7 +65,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['ncempy>=1.6.0', 'tifffile', 'dask', 'numpy', 'databroker', 'qtpy', 'pyqtgraph'],
+    install_requires=['ncempy>=1.7.0', 'tifffile', 'dask', 'numpy', 'databroker', 'qtpy', 'pyqtgraph'],
 
     setup_requires=[],
 
