@@ -1,3 +1,6 @@
 *.pyc
 xicam.NCEM.egg-info/*
-
+.idea
+.pytest_cache
+build
+dist
