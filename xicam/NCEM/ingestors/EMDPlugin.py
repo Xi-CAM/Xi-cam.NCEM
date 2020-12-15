@@ -128,7 +128,11 @@ def _metadata(path):  # parameterized by path rather than emd_obj so that hashin
         pass
     try:
         metaData['stage'] = {}
-        metaData['stage'].update(emd_obj.file_hdl['/stage'].attrs)
+        # Check for legacy keys in stage group. Skip the rest
+        good_keys = ('position', 'type', 'Type')
+        for k in good_keys:
+            if k in emd_obj.file_hdl['/stage'].attrs:
+                metaData['stage'][k] = emd_obj.file_hdl['/stage'].attrs[k]
     except:
         pass
 
