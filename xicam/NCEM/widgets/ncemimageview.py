@@ -54,9 +54,10 @@ class NCEMCatalogView(CatalogView):
         if data is None:
             return 0, 0
 
-        sl = slice(None, None, max(1, int(data.size // 1e6)))
-        data = np.asarray(data[sl])
+        #sl = slice(None, None, max(1, int(data.size // 1e6)))
+        #data = np.asarray(data[sl])
         data0 = data[0:200, :, :]
+
         levels = [np.nanmin(data0),
                   np.nanpercentile(np.where(data0 < np.nanmax(data0), data0, np.nanmin(data0)), 99.9)]
 
