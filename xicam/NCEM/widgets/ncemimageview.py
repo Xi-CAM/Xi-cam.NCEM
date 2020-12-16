@@ -1,4 +1,3 @@
-import functools
 import numpy as np
 
 from xicam.gui.widgets.dynimageview import DynImageView
@@ -9,7 +8,6 @@ class NCEMImageView(DynImageView):
     def __init__(self, *args, **kwargs):
         super(NCEMImageView, self).__init__(*args, **kwargs)
 
-    @functools.lru_cache(maxsize=10, typed=False)
     def quickMinMax(self, data):
         """
         Estimate the min/max values of *data* by subsampling.
@@ -29,7 +27,6 @@ class NCEMFFTView(DynImageView):
     def __init__(self, *args, **kwargs):
         super(NCEMFFTView, self).__init__(*args, **kwargs)
 
-    @functools.lru_cache(maxsize=10, typed=False)
     def quickMinMax(self, data):
         """
         Estimate the min/max values of *data* by subsampling.
