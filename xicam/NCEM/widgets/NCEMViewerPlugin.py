@@ -5,13 +5,12 @@ from pyqtgraph import InfLineLabel
 from qtpy.QtWidgets import *
 
 from xicam.core import msg
-#from xicam.gui.widgets.dynimageview import DynImageView
 from xicam.gui.widgets.imageviewmixins import CatalogView, FieldSelector, StreamSelector, ExportButton, BetterButtons
-#from .ncemimageview import NCEMImageView
+from .ncemimageview import NCEMCatalogView
 
 
 class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButtons,
-                       CatalogView, QWidget):
+                       NCEMCatalogView, QWidget):
 
     def __init__(self, catalog, stream: str = 'primary', field: str = 'raw',
                  toolbar: QToolBar = None, *args, **kwargs):
