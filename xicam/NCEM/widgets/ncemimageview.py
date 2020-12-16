@@ -4,6 +4,7 @@ import numpy as np
 from xicam.gui.widgets.dynimageview import DynImageView
 from xicam.gui.widgets.imageviewmixins import CatalogView
 
+
 class NCEMImageView(DynImageView):
     def __init__(self, *args, **kwargs):
         super(NCEMImageView, self).__init__(*args, **kwargs)
@@ -28,6 +29,7 @@ class NCEMFFTView(DynImageView):
     def __init__(self, *args, **kwargs):
         super(NCEMFFTView, self).__init__(*args, **kwargs)
 
+    @functools.lru_cache(maxsize=10, typed=False)
     def quickMinMax(self, data):
         """
         Estimate the min/max values of *data* by subsampling.
@@ -47,6 +49,7 @@ class NCEMCatalogView(CatalogView):
     def __init__(self, *args, **kwargs):
         super(NCEMCatalogView, self).__init__(*args, **kwargs)
 
+    @functools.lru_cache(maxsize=10, typed=False)
     def quickMinMax(self, data):
         """
         Estimate the min/max values of *data* by subsampling. MODIFIED TO USE THE 99.9TH PERCENTILE instead of max.
@@ -54,9 +57,9 @@ class NCEMCatalogView(CatalogView):
         if data is None:
             return 0, 0
 
-        #sl = slice(None, None, max(1, int(data.size // 1e6)))
-        #data = np.asarray(data[sl])
-        data0 = data[0:200, :, :]
+        # sl = slice(None, None, max(1, int(data.size // 1e6)))
+        # data = np.asarray(data[sl])
+        data0 = data[0:50, ::10, ::10]
 
         levels = [np.nanmin(data0),
                   np.nanpercentile(np.where(data0 < np.nanmax(data0), data0, np.nanmin(data0)), 99.9)]
