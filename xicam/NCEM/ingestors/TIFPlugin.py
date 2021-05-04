@@ -66,6 +66,7 @@ def ingest_NCEM_TIF(paths):
     start_doc = metadata = _metadata(path)
     start_doc.update(run_bundle.start_doc)
     start_doc["sample_name"] = Path(paths[0]).resolve().stem
+    start_doc['FileName'] = path
     yield 'start', start_doc
 
     num_t = _num_t(path)
