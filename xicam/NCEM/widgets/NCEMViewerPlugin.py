@@ -85,14 +85,20 @@ class NCEMViewerPlugin(StreamSelector, FieldSelector, ExportButton, BetterButton
 
         start_doc = getattr(self.catalog, self.stream).metadata['start']
         if 'FileName' in start_doc:
-            current_dir = Path(start_doc['FileName']).parent
+            current_dir = str(Path(start_doc['FileName']).parent)
+            current_name = Path(start_doc['FileName']).stem
+        elif 'sample_name' in start_doc:
+            current_dir = str(Path.home())  # sample name is usually just te file stem
+            current_name = Path(start_doc['sample_name']).stem
         else:
             current_dir = Path.home()
+            current_name = 'xicamNCEM_output'
 
         # Get a file path to save to in current directory
         fd = FileDialog()
         fd.setNameFilter("TIF (*.tif)")
-        fd.setDirectory(str(current_dir))
+        fd.setDirectory(current_dir)
+        fd.selectFile(current_name)
         fd.setFileMode(FileDialog.AnyFile)
         fd.setAcceptMode(FileDialog.AcceptSave)
 
