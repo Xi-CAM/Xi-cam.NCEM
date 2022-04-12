@@ -420,7 +420,7 @@ def emd_sniffer(path, first_bytes):
     if test_velox:
         # Test for Velox
         with emdVelox.fileEMDVelox(path) as emd2:
-            ver = emd2.file_hdl['Version'][0].decode('ASCII')
+            ver = emd2._file_hdl['Version'][0].decode('ASCII')
             if ver.find('Velox') > -1:
                 return 'application/x-EMD-VELOX'
     else:
