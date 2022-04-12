@@ -69,7 +69,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     # xicam 2.3.0 and databroker 1.2.4 work
     install_requires=['ncempy>=1.7.0', 'tifffile', 'dask', 'numpy', 'databroker', 'qtpy', 'pyqtgraph',
-                      'xicam==2.3.0','databroker<2'],
+                      'xicam==2.3.0','databroker<2', 'pyyaml==5.4.1'],
 
     setup_requires=[],
 
